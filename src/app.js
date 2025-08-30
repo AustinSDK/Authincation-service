@@ -6,8 +6,13 @@ const path = require("path");
 const fs = require("fs")
 
 const express = require("express");
-const auth = require("./libs/auth")(express,db);
 const app = express();
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+const auth = require("./libs/auth")(express,db);
+app.use(auth.router);
+
 app.set("views", path.join(__dirname, "pages"));
 app.set("view engine", "ejs");
 
@@ -27,6 +32,7 @@ app.get("/css/:path",(req,res,next)=>{
     res.sendFile(_path)
 });
 
+// TODO: make a basic user auth
 app.get("/createuser",async (req,res,next)=>{
     let username = req.query.username;
     let password = req.query.password;

@@ -15,9 +15,9 @@ async function compare(hash,p){
 let users = []
 class mhm{
     constructor(express,db){
-        this.db = db
-        const router = express.Router();
-        router.post("/login",async (req,res)=>{
+        this.db = db;
+        this.router = express.Router();
+        this.router.post("/login",async (req,res)=>{
 
             const {username,password} = req.body;
             const user = this.db.prepare("SELECT * FROM users WHERE username LIKE ?").get(username);
@@ -31,9 +31,17 @@ class mhm{
                 process.env.JWT_SECRET || "qsd90!h3l2$!@asdn1p9dfn12h*#asdnj2"
             )
 
-            console.log(token);
+            res.cookie("token", token, {
+                httpOnly: true,
+                secure: true,
+                domain: "." + req.hostname.split('.').slice(-2).join('.'),
+                sameSite: "lax",
+                path: "/"
+            });
+            res.json({ message: "Login successful" });
         })
     }
+
     createAccount = async (username, password) => {
         const existingUser = this.db.prepare("SELECT * FROM users WHERE username LIKE ?").get(username);
         console.log(existingUser);
