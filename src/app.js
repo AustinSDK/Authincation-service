@@ -1,9 +1,12 @@
 require("dotenv").config();
 
+const db = require("./libs/db")
+
 const path = require("path");
 const fs = require("fs")
 
 const express = require("express");
+const auth = require("./libs/auth")(express,db);
 const app = express();
 app.set("views", path.join(__dirname, "pages"));
 app.set("view engine", "ejs");
@@ -23,6 +26,13 @@ app.get("/css/:path",(req,res,next)=>{
     if (!fs.existsSync(_path)) return next();
     res.sendFile(_path)
 });
+
+app.get("/createuser",async (req,res,next)=>{
+    let username = req.query.username;
+    let password = req.query.password;
+
+    return res.send(await auth.createAccount(username,password))
+})
 
 // Static file paths
 app.get("/",(req,res)=>{
