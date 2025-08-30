@@ -1,0 +1,29 @@
+{
+  "name": "auth",
+  "version": "1.0.0",
+  "description": "A coolio auth thing, mhm",
+  "main": "src/app.js",
+  "scripts": {
+    "test": "node src/app.js -t",
+    "start": "node src/app.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Null-Austin-Industries/Authincation-service.git"
+  },
+  "keywords": [
+    "auth",
+    "null-austin"
+  ],
+  "author": "Austins SDK",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Null-Austin-Industries/Authincation-service/issues"
+  },
+  "homepage": "https://github.com/Null-Austin-Industries/Authincation-service#readme",
+  "dependencies": {
+    "ejs": "^3.1.10",
+    "express": "^5.1.0",
+    "sqlite3": "^5.1.7"
+  }
+}
