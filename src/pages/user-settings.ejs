@@ -6,15 +6,33 @@
     <title>User settings</title>
     <link rel="stylesheet" href="/css/main.css">
     <link rel="stylesheet" href="/css/settings.css">
+    <script>
+        logout = async (id) => {
+            try {
+                const response = await fetch('/logout', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ tokenId: id })
+                });
+
+                const result = await response.json();
+                
+                if (response.ok) {
+                    window.location.reload();
+                } else {
+                    alert('Error: ' + result.message);
+                }
+            } catch (error) {
+                console.error('Logout error:', error);
+                alert('An error occurred while logging out');
+            }
+        }
+    </script>
 </head>
 <body>
     <h1>logged in tokens</h1>
-    <p class="token">
-        <span class="info" title="current-device">CD</span>
-        <span class="id info" title="id">[1111]</span>
-        <span class="timestamp info" title="time-stamp">[8/31/25]</span>
-        - <a href="#">Logout session</a>
-    </p>
     <% tokens.forEach(token => { %>
         <p class="token">
             <% if (token.token === user.token) { %>
@@ -22,7 +40,7 @@
             <% } %>
             <span class="id info" title="id">[<%= token.id %>]</span>
             <span class="timestamp info" title="time-stamp">[<%= String(token.time_stamp).split(" ")[0] %>]</span>
-            - <a href="#">Logout session</a>
+            - <a href="#" onclick="logout(<%= token.id %>)">Logout session</a>
         </p>
     <% }) %>
 </body>

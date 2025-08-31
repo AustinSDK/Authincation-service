@@ -14,13 +14,48 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
+// Add cache-control headers to prevent caching issues
+app.use((req, res, next) => {
+    res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+    res.set('Pragma', 'no-cache');
+    res.set('Expires', '0');
+    next();
+});
+
 app.use((req,res,next)=>{
     if (!req.cookies || !req.cookies.token){
         req.user = false;
     } else{
         let user = auth.getUserFromToken(req.cookies.token);
-        user.permissions = JSON.parse(user.permissions)
-        req.user = user
+        if (user) {
+            try {
+                // Handle case where permissions might be null, undefined, empty string, array, or malformed JSON
+                if (!user.permissions) {
+                    user.permissions = [];
+                } else if (Array.isArray(user.permissions)) {
+                    // Already an array, use as is
+                    user.permissions = user.permissions;
+                } else if (typeof user.permissions === 'string') {
+                    if (user.permissions.trim() === '') {
+                        user.permissions = [];
+                    } else {
+                        user.permissions = JSON.parse(user.permissions);
+                    }
+                } else {
+                    // Unknown type, default to empty array
+                    user.permissions = [];
+                }
+            } catch (error) {
+                console.error('Error parsing user permissions:', error);
+                console.error('Problematic permissions value:', user.permissions);
+                console.error('Permissions type:', typeof user.permissions);
+                user.permissions = [];
+            }
+            user.token = req.cookies.token;
+            req.user = user;
+        } else {
+            req.user = false;
+        }
     }
     next()
 })
@@ -75,7 +110,7 @@ app.get("/login",async (req,res,next)=>{
 app.get("/",(req,res)=>{
     let user = req.user
     if (!user){
-        res.redirect("/login")
+        return res.redirect("/login")
     }
     let projects = auth.getProjects(user.permissions)
     res.render("index.ejs",{user:user,projects:projects});
@@ -83,7 +118,7 @@ app.get("/",(req,res)=>{
 app.get("/projects",(req,res)=>{
     let user = req.user
     if (!user){
-        res.redirect("/login")
+        return res.redirect("/login")
     }
     let projects = auth.getProjects(user.permissions)
     res.render("projects.ejs",{user:user,projects:projects});
@@ -91,7 +126,7 @@ app.get("/projects",(req,res)=>{
 app.get("/projects/create",(req,res)=>{
     let user = req.user
     if (!user){
-        res.redirect("/login")
+        return res.redirect("/login")
     }
     let projects = auth.getProjects(user.permissions)
     res.render("create-project.ejs",{user:user,projects:projects});
@@ -102,7 +137,7 @@ app.get("/user/:id/settings", async (req,res,next)=>{
     let user = req.user
     let id = req.params.id
     if (!user || (user.id !== id && (!user.permissions.includes("admin")))){
-        res.redirect("/login")
+        return res.redirect("/login")
     }
     res.render("user-settings",{tokens:auth.getUserTokens(req.params.id),user:req.user})
 })
@@ -127,13 +162,13 @@ app.post("/projects/create",(req,res)=>{
             projectId: result.lastInsertRowid
         });
     } catch (error) {
-        res.status(400).json({ message: error.message });
+        return res.status(400).json({ message: error.message });
     }
 });
 app.get("/delete",(req,res)=>{
     let user = req.user
     if (!user || !user.permissions){
-        res.redirect("/login")
+        return res.redirect("/login")
     }
     
     if (!req.query || !req.query.id){
