@@ -1,5 +1,21 @@
 const jwt = require("jsonwebtoken");
 const argon2 = require("argon2");
+const Joi = require("joi");
+
+// Define validation schema
+const userSchema = Joi.object({
+    username: Joi.string()
+        .alphanum()
+        .min(3)
+        .max(30)
+        .required(),
+    password: Joi.string()
+        .pattern(new RegExp('^[a-zA-Z0-9!@#$%^&*]{8,30}$'))
+        .required()
+        .messages({
+            'string.pattern.base': 'Password must be between 8-30 characters and can contain letters, numbers, and special characters (!@#$%^&*)'
+        })
+});
 
 async function hash(p){
     return await argon2.hash(p);
@@ -41,28 +57,41 @@ class mhm{
             res.json({ message: "Login successful" });
         })
         this.router.post("/register",async (req,res)=>{
+            try {
+                const { username, password } = req.body;
+                
+                // First validate the input
+                const { error, value } = userSchema.validate({
+                    username: username,
+                    password: password
+                });
+                if (error) {
+                    return res.status(400).json({
+                        message: error.details[0].message
+                    });
+                }
 
-            const {username,password} = req.body;
-
-            try{
-                let x = await this.createAccount(username,password)
-            } catch (e){
+                // Then check blocked usernames
+                let blocked = ['admin','root','webmaster','test','null'];
+                const lowercaseUsername = String(username).toLowerCase();
+                if (blocked.includes(lowercaseUsername)){
+                    throw new Error("Unallowed username");
+                }
+                
+                await this.createAccount(lowercaseUsername, password);
+                
+                return res.status(201).json({
+                    message: "Created user account successfully!"
+                });
+            } catch (e) {
                 return res.status(400).json({
                     message: e.message || String(e)
-                })
+                });
             }
-            return res.status(201).json({
-                message: "Created user account successfully!"
-            })
         })
     }
 
     createAccount = async (username, password, perms="[]") => {
-        let blocked = ['admin','root','webmaster','test','null'];
-        username = String(username).toLowerCase()
-        if (blocked.includes(username)){
-            throw new Error("Unallowed username");
-        }
         const existingUser = this.db.prepare("SELECT * FROM users WHERE username LIKE ?").get(username);
         if (existingUser) {
             throw new Error("Account already exists");
