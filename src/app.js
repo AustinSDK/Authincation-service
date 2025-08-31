@@ -150,7 +150,7 @@ app.get("/settings",(req,res,next)=>{
 app.get("/user/:id/settings", async (req,res,next)=>{
     let user = req.user
     let id = parseInt(req.params.id, 10)
-    if (!user || (user.id !== id && (!user.permissions.includes("admin")))){
+    if (!user || (user.id !== id && (!user.admin))){
         return res.redirect("/login")
     }
     res.render("user-settings",{tokens:auth.getUserTokens(id),user:req.user})
@@ -160,7 +160,7 @@ app.get("/user/:id/settings", async (req,res,next)=>{
 app.get("/project/:id", async (req,res,next)=>{
     let user = req.user
     let id = parseInt(req.params.id, 10)
-    if (!user || !user.permissions.includes("editor") && !user.permissions.includes("admin")){
+    if (!user || !user.permissions.includes("editor") && !user.admin){
         return res.redirect("/login")
     }
     let project = auth.getProjectFromId(id)
@@ -184,7 +184,7 @@ app.post("/projects/create",(req,res)=>{
     }
     
     // Check if user has proper permissions to create projects
-    if (!user.permissions.includes("admin") && !user.permissions.includes("editor")) {
+    if (!user.admin && !user.permissions.includes("editor")) {
         return res.status(403).json({ message: "Insufficient permissions to create projects" });
     }
     
@@ -213,7 +213,7 @@ app.post("/projects/update",(req,res)=>{
     }
     
     // Check if user has proper permissions to update projects
-    if (!user.permissions.includes("admin") && !user.permissions.includes("editor")) {
+    if (!user.admin && !user.permissions.includes("editor")) {
         return res.status(403).json({ message: "Insufficient permissions to update projects" });
     }
     
@@ -248,7 +248,7 @@ app.post("/projects/delete",(req,res)=>{
     }
     
     // Check if user has admin permissions or is the project owner
-    if (!user.permissions.includes("admin")) {
+    if (!user.admin) {
         return res.status(403).json({ message: "Insufficient permissions" });
     }
     
