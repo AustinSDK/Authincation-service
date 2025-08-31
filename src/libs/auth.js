@@ -138,6 +138,34 @@ class mhm{
         projects = this.db.prepare("SELECT * FROM projects")
         return x
     }
+    createProject(name, description, link, permissions) {
+        // Validate project name
+        if (!name || !name.trim()) {
+            throw new Error("Project name is required");
+        }
+        
+        // Check if project with same name already exists
+        const existingProject = this.db.prepare("SELECT * FROM projects WHERE name = ?").get(name.trim());
+        if (existingProject) {
+            throw new Error("Project with this name already exists");
+        }
+        
+        // Convert permissions array to JSON string
+        const permissionsJson = JSON.stringify(permissions || []);
+        
+        // Insert new project
+        const result = this.db.prepare("INSERT INTO projects (name, description, link, permissions) VALUES (?, ?, ?, ?)").run(
+            name.trim(),
+            description || "",
+            link || "/",
+            permissionsJson
+        );
+        
+        // Clear projects cache to force refresh
+        _projects_chached = false;
+        
+        return result;
+    }
     getProjects(permissions){
         let allowedProjects = []
 

@@ -88,6 +88,37 @@ app.get("/projects",(req,res)=>{
     let projects = auth.getProjects(user.permissions)
     res.render("projects.ejs",{user:user,projects:projects});
 });
+app.get("/projects/create",(req,res)=>{
+    let user = req.user
+    if (!user){
+        res.redirect("/login")
+    }
+    let projects = auth.getProjects(user.permissions)
+    res.render("create-project.ejs",{user:user,projects:projects});
+});
+
+app.post("/projects/create",(req,res)=>{
+    let user = req.user
+    if (!user){
+        return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    try {
+        const { name, description, link, permissions } = req.body;
+        
+        if (!name || !name.trim()) {
+            return res.status(400).json({ message: "Project name is required" });
+        }
+        
+        const result = auth.createProject(name.trim(), description || "", link || "/", permissions || []);
+        res.json({ 
+            message: "Project created successfully",
+            projectId: result.lastInsertRowid
+        });
+    } catch (error) {
+        res.status(400).json({ message: error.message });
+    }
+});
 app.get("/delete",(req,res)=>{
     let user = req.user
     if (!user || !user.permissions){
