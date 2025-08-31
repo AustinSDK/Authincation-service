@@ -46,7 +46,11 @@
             </p>
         <% }) %>
         <% if (user.admin) { %>
-        <a href="?admin">Admin view</a>
+            <% if ("admin" in query) { %>
+                <a href="?">Regular view</a>
+            <% } else { %>
+                <a href="?admin">Admin view</a>
+            <% } %>
         <% } %>
     </main>
 </body>
