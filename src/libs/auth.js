@@ -150,7 +150,7 @@ class mhm{
 
             // check if its just empty
             project.permissions = JSON.parse(project.permissions)
-            if (!project.permissions || project.permissions == 0){
+            if (!project.permissions || project.permissions == 0 || permissions.includes("admin")){
                 allowedProjects.push(project)
                 continue
             }

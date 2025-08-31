@@ -3,18 +3,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Home</title>
     <link rel="stylesheet" href="/css/main.css">
     <link rel="stylesheet" href="/css/index.css">
 </head>
 <body>
     <h1>Welcome, <%= user.username %>!</h1>
     <p>How are u? Anyways, here are some tools you may access:</p>
-    <p><% projects.forEach(element => { %>
+    <h2>Tools</h2>
+    <% projects.forEach(element => { %>
         <p>
             <a href="<%= element.link %>"><%= element.name %></a>
              - <%= element.description %>
         </p>
-    <% }) %></p>
+    <% }) %>
+    <br>
+    <% if (user.permissions.includes("editor") || user.permissions.includes("admin")) {%>
+        <a href="/projects">Projects</a>
+    <% } %>
+    <% if (user.permissions.includes("admin")) {%>
+        <br>
+        <a href="/settings">Settings</a>
+    <% } %>
 </body>
 </html>
