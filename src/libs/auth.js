@@ -21,10 +21,12 @@ const userSchema = Joi.object({
         .max(30)
         .required(),
     password: Joi.string()
-        .pattern(new RegExp('^[a-zA-Z0-9!@#$%^&*]{8,30}$'))
+        .min(8)
+        .max(128)
+        .pattern(new RegExp('^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{8,}$'))
         .required()
         .messages({
-            'string.pattern.base': 'Password must be between 8-30 characters and can contain letters, numbers, and special characters (!@#$%^&*)'
+            'string.pattern.base': 'Password must be at least 8 characters long and contain at least one lowercase letter, one uppercase letter, one number, and one special character (@$!%*?&)'
         })
 });
 
@@ -141,14 +143,22 @@ class mhm{
     }
 
     createAccount = async (username, password, perms="[]") => {
-        const existingUser = this.db.prepare("SELECT * FROM users WHERE username LIKE ?").get(username);
-        if (existingUser) {
-            throw new Error("Account already exists");
-        }
+        try {
+            const existingUser = this.db.prepare("SELECT * FROM users WHERE username LIKE ?").get(username);
+            if (existingUser) {
+                throw new Error("Account already exists");
+            }
 
-        // hash password and insert new user
-        const hashedPassword = await hash(password);
-        return this.db.prepare("INSERT INTO users (username, password, permissions) VALUES (?, ?, ?)").run(username, hashedPassword,perms);
+            // hash password and insert new user
+            const hashedPassword = await hash(password);
+            return this.db.prepare("INSERT INTO users (username, password, permissions) VALUES (?, ?, ?)").run(username, hashedPassword, perms);
+        } catch (error) {
+            if (error.message === "Account already exists") {
+                throw error;
+            }
+            console.error("Database error in createAccount:", error);
+            throw new Error("Failed to create account");
+        }
     }
     getUserPermissions(uuid){
         let _users = users;
@@ -192,7 +202,7 @@ class mhm{
     deleteProject(id){
         console.log(id)
         let x = this.db.prepare("DELETE FROM projects WHERE id = ?").run(id)
-        projects = this.db.prepare("SELECT * FROM projects")
+        _projects_chached = false; // Clear cache when project is deleted
         return x
     }
     createProject(name, description, link, permissions) {
@@ -233,12 +243,10 @@ class mhm{
         let allowedProjects = []
 
         // cache the projects if not cached
-        // if (!_projects_chached){
-        //     _projects_chached = true;
-        //     projects = this.db.prepare("SELECT * FROM projects").all();
-        // }
-        // broken?
-        projects = this.db.prepare("SELECT * FROM projects").all();
+        if (!_projects_chached){
+            _projects_chached = true;
+            projects = this.db.prepare("SELECT * FROM projects").all();
+        }
 
         // check each project
         let _projects = projects

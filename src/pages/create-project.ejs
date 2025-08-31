@@ -83,14 +83,14 @@
             <p style="text-align: center;"><a href="https://www.enable-javascript.com/">This app doesnt work without js :(</a></p>
         </noscript>
         <form action="" id="form">
-            <label for="username">Name:</label><br>
-            <input type="text" name="username" id="t_username">
+            <label for="name">Name:</label><br>
+            <input type="text" name="name" id="t_username" required maxlength="100">
             <br>
             <label for="description">Description:</label><br>
-            <input type="text" name="description" id="t_description">
+            <input type="text" name="description" id="t_description" maxlength="500">
             <br>
             <label for="link">Link:</label><br>
-            <input type="text" name="link" id="t_link">
+            <input type="text" name="link" id="t_link" maxlength="200" placeholder="/">
             <br>
             <table>
                 <caption>User Permissions</caption>
@@ -103,10 +103,24 @@
                 </tbody>
                 <script>
                     function add(){
-                        let perm = String(prompt("Permission: ")).toLowerCase()
+                        let perm = String(prompt("Permission: "));
+                        if (!perm || perm.trim() === '' || perm === 'null') {
+                            return;
+                        }
+                        
+                        // Sanitize input
+                        perm = perm.toLowerCase().trim();
+                        
+                        // Check for duplicates
+                        let existingPerms = Array.from(document.querySelectorAll("table > tbody td")).map(td => td.textContent);
+                        if (existingPerms.includes(perm)) {
+                            alert("Permission already exists");
+                            return;
+                        }
+                        
                         let tr = document.createElement("tr")
                         let td = document.createElement("td")
-                        td.innerText = perm
+                        td.textContent = perm; // Use textContent instead of innerText for security
                         tr.appendChild(td)
                         document.querySelector("table > tbody").appendChild(tr)
                     }
