@@ -19,6 +19,15 @@ CREATE TABLE IF NOT EXISTS tokens (
     token TEXT UNIQUE NOT NULL,
     time_stamp DATETIME DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE TABLE IF NOT EXISTS projects (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT DEFAULT "no name project" NOT NULL,
+    description TEXT DEFAULT "no description project",
+    permissions DEFAULT "austin" NOT NULL,
+    link TEXT DEFAULT "/" NOT NULL,
+    time_stamp DATETIME DEFAULT CURRENT_TIMESTAMP
+);
     `);
 };
 migrate();

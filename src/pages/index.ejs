@@ -4,8 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
+    <link rel="stylesheet" href="/css/main.css">
+    <link rel="stylesheet" href="/css/index.css">
 </head>
 <body>
-    <p><%= token %></p>
+    <h1>Welcome, <%= user.username %>!</h1>
+    <p>How are u? Anyways, here are some tools you may access:</p>
+    <p><% projects.forEach(element => { %>
+        <p>
+            <a href="<%= element.link %>"><%= element.name %></a>
+             - <%= element.description %>
+        </p>
+    <% }) %></p>
 </body>
 </html>

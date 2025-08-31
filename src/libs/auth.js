@@ -39,6 +39,8 @@ async function compare(hash,p){
     }
 }
 
+let projects = {};
+let _projects_chached = false;
 let users = {};
 class mhm{
     constructor(express,db){
@@ -114,6 +116,61 @@ class mhm{
         // hash password and insert new user
         const hashedPassword = await hash(password);
         return this.db.prepare("INSERT INTO users (username, password, permissions) VALUES (?, ?, ?)").run(username, hashedPassword,perms);
+    }
+    getUserPermissions(uuid){
+        let _users = users;
+        let user;
+        for (let i=0;i<_users.length;i++){
+            if (uuid == _users[i].id){
+                user = _users[i]
+                break
+            }
+        }
+        if (!user){
+            user = this.db.prepare(`SELECT * FROM users WHERE id = ?`).get(uuid);
+            users[String(user.id)] = user;
+        }
+        return JSON.parse(user.permissions)
+    }
+    getProjects(permissions){
+        let allowedProjects = []
+
+        // cache the projects if not cached
+        // if (!_projects_chached){
+        //     _projects_chached = true;
+        //     projects = this.db.prepare("SELECT * FROM projects").all();
+        // }
+        // broken?
+        projects = this.db.prepare("SELECT * FROM projects").all();
+
+        // check each project
+        let _projects = projects
+        for (let i = 0; i<_projects.length; i++){
+            let project = _projects[i];
+
+            // check if its just empty
+            project.permissions = JSON.parse(project.permissions)
+            if (!project.permissions || project.permissions == 0){
+                allowedProjects.push(project)
+                continue
+            }
+
+            // check if u have the propper permissions
+            let allow = true;
+            for (let i=0;i<project.permissions.length;i++){
+                let permission = project.permissions[i]
+                if (!permissions.includes(permission)){
+                    allow = false;
+                    break
+                }
+            }
+            if (allow){
+                allowedProjects.push(project)
+            }
+        }
+
+        // return allowed project
+        return allowedProjects
     }
     getUserFromToken(token){
         let user = this.db.prepare(`SELECT * FROM tokens WHERE token = ?`).get(token);

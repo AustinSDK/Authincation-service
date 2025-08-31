@@ -23,6 +23,8 @@ app.use((req,res,next)=>{
     next()
 })
 
+let globalPermissions = []
+
 const auth = require("./libs/auth")(express,db);
 app.use(auth.router);
 
@@ -59,7 +61,9 @@ app.get("/",(req,res)=>{
     if (!user){
         res.redirect("/login")
     }
-    res.render("index.ejs",{token:stringify(user)});
+    let projects = auth.getProjects(user.permissions)
+    user.permissions = JSON.parse(user.permissions)
+    res.render("index.ejs",{user:user,projects:projects});
 });
 
 const port = process.env.port
