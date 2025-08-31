@@ -5,13 +5,25 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>User settings</title>
     <link rel="stylesheet" href="/css/main.css">
+    <link rel="stylesheet" href="/css/settings.css">
 </head>
 <body>
     <h1>logged in tokens</h1>
-    <p>
-        <span class="cdevice">(Current device)</span>
-        <span class="id">[1111]</span>
-        <span class="timestamp">[8/31/25]</span>
+    <p class="token">
+        <span class="info" title="current-device">CD</span>
+        <span class="id info" title="id">[1111]</span>
+        <span class="timestamp info" title="time-stamp">[8/31/25]</span>
         - <a href="#">Logout session</a>
+    </p>
+    <% tokens.forEach(token => { %>
+        <p class="token">
+            <% if (token.token === user.token) { %>
+                <span class="info" title="current-device">CD</span>
+            <% } %>
+            <span class="id info" title="id">[<%= token.id %>]</span>
+            <span class="timestamp info" title="time-stamp">[<%= String(token.time_stamp).split(" ")[0] %>]</span>
+            - <a href="#">Logout session</a>
+        </p>
+    <% }) %>
 </body>
 </html>

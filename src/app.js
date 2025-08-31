@@ -104,7 +104,7 @@ app.get("/user/:id/settings", async (req,res,next)=>{
     if (!user || (user.id !== id && (!user.permissions.includes("admin")))){
         res.redirect("/login")
     }
-    res.render("user-settings",{tokens:auth.getUserTokens(req.params.id)})
+    res.render("user-settings",{tokens:auth.getUserTokens(req.params.id),user:req.user})
 })
 
 // projects creation :shrug:
