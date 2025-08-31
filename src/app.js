@@ -101,10 +101,10 @@ app.get("/js/:path",(req,res,next)=>{
 
 // User auth endpoints? static.
 app.get("/register",async (req,res,next)=>{
-    res.render("register.ejs")
+    res.render("register.ejs", { user: req.user || null })
 })
 app.get("/login",async (req,res,next)=>{
-    res.render("login.ejs")
+    res.render("login.ejs", { user: req.user || null })
 })
 
 // Static file paths
