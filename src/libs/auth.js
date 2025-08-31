@@ -309,8 +309,8 @@ class mhm{
         if (!x){
             return false
         }
-        users[String(dbUser.id)] = dbUser;
-        return dbUser;
+        users[String(x.id)] = x;
+        return x;
     }
 }
 
