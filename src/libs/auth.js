@@ -66,7 +66,6 @@ class mhm{
             res.cookie("token", token, {
                 httpOnly: true,
                 secure: true,
-                domain: "." + req.hostname.split('.').slice(-2).join('.'),
                 sameSite: "lax",
                 path: "/"
             });
