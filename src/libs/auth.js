@@ -53,7 +53,6 @@ class mhm{
 
     createAccount = async (username, password, perms="[]") => {
         const existingUser = this.db.prepare("SELECT * FROM users WHERE username LIKE ?").get(username);
-        console.log(existingUser);
         if (existingUser) {
             throw new Error("Account already exists");
         }
