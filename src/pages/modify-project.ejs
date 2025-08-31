@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Create Project</title>
+        <link rel="stylesheet" href="/css/main.css" />
+        <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css" />
+        <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+</head>
+<body>
+        <%- include('partials/nav', { user: user }) %>
+        <main class="container">
+                <form id="createProjectForm" class="auth-form" autocomplete="off">
+                        <h1 style="margin-bottom:.25rem;">Create Project</h1>
+                        <p class="muted center" style="margin-top:0;">Define a name, optional description, link and permissions.</p>
+                        <div class="field">
+                                <label for="t_username">Name</label>
+                                <input type="text" id="t_username" maxlength="60" />
+                        </div>
+                        <div class="field">
+                                <label for="t_description">Description</label>
+                                <input type="text" id="t_description" maxlength="140" />
+                        </div>
+                        <div class="field">
+                                <label for="t_link">Link</label>
+                                <input type="text" id="t_link" placeholder="/" />
+                        </div>
+                        <div class="field">
+                                <label>Permissions</label>
+                                <div class="permission-editor">
+                                        <div class="chips" id="permChips" aria-live="polite"></div>
+                                        <div class="perm-add-row">
+                                                <input type="text" id="permInput" placeholder="Type permission & Enter" aria-label="Add permission" />
+                                                <button type="button" id="clearPerms" class="btn btn-ghost small" title="Clear all">Clear</button>
+                                        </div>
+                                        <p class="muted" style="font-size:.65rem; margin:.4rem 0 0;">Examples: viewer, editor, analytics</p>
+                                </div>
+                        </div>
+                        <input type="submit" value="Create Project" class="btn btn-accent" disabled />
+                        <div class="alt-link"><a href="/projects">Back to projects</a></div>
+                </form>
+        </main>
+</body>
+</html>
+<script>
+function toToast(msg){
+    Toastify({ text: msg, duration: 3000, gravity: 'top', position: 'right', style:{ background: 'rgb(212,56,56)', color:'#fff' } }).showToast();
+}
+
+const form = document.getElementById('createProjectForm');
+const submit = form.querySelector('input[type="submit"]');
+const permInput = document.getElementById('permInput');
+const permChips = document.getElementById('permChips');
+const clearPermsBtn = document.getElementById('clearPerms');
+
+document.addEventListener('DOMContentLoaded', () => { submit.disabled = false; });
+
+function getPerms(){
+    return Array.from(permChips.querySelectorAll('.chip')).map(c => c.dataset.value);
+}
+function addPerm(raw){
+    const v = (raw || '').trim().toLowerCase();
+    if(!v) return; if(getPerms().includes(v)) return toToast('Permission exists');
+    const chip = document.createElement('button');
+    chip.type='button';
+    chip.className='chip';
+    chip.dataset.value=v;
+    chip.innerHTML = `<span>${v}</span><span class="x" aria-label="Remove">×</span>`;
+    chip.addEventListener('click', ()=> chip.remove());
+    permChips.appendChild(chip);
+}
+permInput.addEventListener('keydown', e => { if(e.key==='Enter'){ e.preventDefault(); addPerm(permInput.value); permInput.value=''; }});
+clearPermsBtn.addEventListener('click', ()=> { permChips.innerHTML=''; });
+
+form.addEventListener('submit', async e => {
+    e.preventDefault();
+    submit.disabled = true;
+    const name = document.getElementById('t_username').value;
+    const description = document.getElementById('t_description').value;
+    const link = document.getElementById('t_link').value || '/';
+    const permissions = getPerms();
+    if(!name.trim()){ toToast('Project name is required'); submit.disabled=false; return; }
+    try {
+        const _fetch = await fetch('/projects/create', { method:'POST', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify({ name, description, link, permissions }) });
+        const response = await _fetch.json();
+        if(_fetch.ok){
+            toToast('Project created');
+            setTimeout(()=> { window.location.href='/projects'; }, 800);
+        } else {
+            toToast(response.message || 'Failed to create');
+            submit.disabled = false;
+        }
+    } catch(err){
+        toToast('Error: '+ err.message);
+        submit.disabled = false;
+    }
+});
+</script>

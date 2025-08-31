@@ -152,6 +152,16 @@ app.get("/user/:id/settings", async (req,res,next)=>{
     res.render("user-settings",{tokens:auth.getUserTokens(id),user:req.user})
 })
 
+// project settings
+app.get("/project/:id", async (req,res,next)=>{
+    let user = req.user
+    let id = parseInt(req.params.id, 10)
+    if (!user.permissions.includes("editor") && !user.permissions.includes("editor")){
+        return res.redirect("/login")
+    }
+    res.render("create-project",{tokens:auth.getUserTokens(id),user:req.user})
+})
+
 // projects creation :shrug:
 app.post("/projects/create",(req,res)=>{
     let user = req.user
