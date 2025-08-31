@@ -45,7 +45,7 @@
                 - <a href="#" onclick="logout(<%= token.id %>)">Logout session</a>
             </p>
         <% }) %>
-        <% if (user.permissions.includes("admin")) { %>
+        <% if (user.admin) { %>
         <a href="#">Admin view</a>
         <% } %>
     </main>
