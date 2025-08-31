@@ -116,10 +116,8 @@ class mhm{
         return this.db.prepare("INSERT INTO users (username, password, permissions) VALUES (?, ?, ?)").run(username, hashedPassword,perms);
     }
     getUserFromToken(token){
-        console.log(`x: ${token}`)
         let user = this.db.prepare(`SELECT * FROM tokens WHERE token = ?`).get(token);
         if (!user){
-            console.log(false)
             return false
         }
         let id = user.uuid

@@ -46,12 +46,9 @@ app.get("/login",async (req,res,next)=>{
 
 // Static file paths
 app.get("/",(req,res)=>{
-    console.log(req.cookies)
-    console.log(1)
     if (!req.cookies || !req.cookies.token){
         return res.redirect("/login")
     }
-    console.log(2)
     let user = auth.getUserFromToken(req.cookies.token);
     if (!user){
         res.redirect("/login")
