@@ -32,9 +32,12 @@ app.get("/css/:path",(req,res,next)=>{
     res.sendFile(_path)
 });
 
-// TODO: make a basic user auth
+// User auth endpoints? static.
 app.get("/register",async (req,res,next)=>{
     res.render("register.ejs")
+})
+app.get("/login",async (req,res,next)=>{
+    res.render("login.ejs")
 })
 
 // Static file paths

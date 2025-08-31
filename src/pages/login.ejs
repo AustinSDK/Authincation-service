@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+    <link rel="stylesheet" href="/css/main.css">
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+    <style>
+        div#form{
+            background-color: rgb(19, 19, 19);
+            width: 25%;
+            padding: 10px;
+            margin: 0 auto;
+        }
+        h1{
+            text-align: center;
+        }
+        form{
+            background-color: rgb(15, 15, 15);
+            padding: 5px;
+        }
+        form br{
+            margin-block: 3px;
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        form input[type="text"], form input[type="password"]{
+            background: none;
+            border: none;
+            border-bottom: 1px rgb(139, 139, 139) solid;
+            color: white;
+            width: 55%; 
+        }
+        form input[type="submit"]{
+            padding: 6px;
+            margin-top: 10px;
+            background-color: rgb(190, 81, 54);
+            border: none;
+            border: 1px black solid;
+            border-radius: 5px;
+            color: white;
+            width: 55%;
+            cursor:pointer;
+        }
+        form input[type="submit"]:disabled{
+            background-color: rgb(109, 47, 32);
+            color: white;
+            cursor:not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <div id="form">
+        <h1>Login</h1>
+        <noscript>
+            <a href="https://www.enable-javascript.com/" style="text-decoration-color: rgb(212, 56, 56);">
+                <p style="color: rgb(212, 56, 56); text-align: center;">This app doesnt work without js :(</p>
+            </a>
+        </noscript>
+        <form action="" id="form">
+            <label for="username">Username:</label><br>
+            <input type="text" name="username" id="t_username">
+            <br>
+
+            <label for="password">Password:</label><br>
+            <input type="password" name="password" id="t_password">
+            <br>
+
+            <input type="submit" value="Login" disabled>
+        </form>
+    </div>
+</body>
+</html>
+<script>
+
+function toToast(msg){
+    Toastify({
+        text: msg,
+        duration: 3000,
+        newWindow: false,
+        close: false,
+        gravity: "top", // `top` or `bottom`
+        position: "right", // `left`, `center` or `right`
+        stopOnFocus: true, // Prevents dismissing of toast on hover
+        style: {
+            background: "rgb(212, 56, 56)",
+            color:"white"
+        },
+    }).showToast();
+}
+
+let form = document.getElementById("form");
+
+let username = document.getElementById("t_username");
+let password = document.getElementById("t_password");
+
+let submit = document.querySelector("form input[type=\"submit\"]")
+
+document.addEventListener("DOMContentLoaded",e=>{
+    submit.disabled = false;
+})
+
+form.addEventListener("submit",async e=>{
+    e.preventDefault();
+    submit.disabled = true;
+    try {
+        let _fetch = await fetch("/login",{
+            headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+            },
+            method: "POST",
+            body: JSON.stringify({username:username.value,password:password.value}),
+            credentials: 'include' // This is important to accept cookies
+        });
+        
+        let response = await _fetch.json();
+        let status = _fetch.status;
+        
+        if (status === 200) {
+            // Success - redirect to home page
+            window.location.href = "/";
+        } else {
+            // Show error message
+            toToast(response.message || "Login failed");
+            submit.disabled = false;
+        }
+    } catch (error) {
+        toToast("An error occurred during login");
+        submit.disabled = false;
+    }
+})
+</script>
