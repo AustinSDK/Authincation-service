@@ -9,22 +9,45 @@
     <script src="/js/projects.js"></script>
 </head>
 <body>
-    <h1>Projects</h1>
-    <h2>Tools:</h2>
-    <a href="/projects/create">Create Project</a>
-    <br>
-    <h2>Projects</h2>
-    <% projects.forEach(element => { %>
-        <p>
-            <a href="<%= element.link %>"><%= element.name %></a>
-             - <%= element.description %>
-        </p>
-        <p>
-            <a href="#" onclick="javascript:_delete(<%= element.id %>)">> Delete</a>
-            <a href="#" onclick="javascript:_modify(<%= element.id %>)">> Modify</a>
-            <a href="<%= element.link %>">> View</a>
-        </p>
-        <br>
-    <% }) %>
+    <%- include('partials/nav', { user: user }) %>
+    <main class="container">
+        <header>
+            <h1>Projects</h1>
+            <p class="muted" style="margin-top:.5rem;">Manage and explore available tools/projects.</p>
+            <div style="margin-top:1rem;">
+                <a href="/projects/create" class="btn btn-accent">Create Project</a>
+            </div>
+        </header>
+        <section>
+            <h2 style="margin-top:2.25rem;">Project List</h2>
+            <ul class="project-list">
+                <% projects.forEach(element => { %>
+                    <li class="project-card" data-project-id="<%= element.id %>">
+                        <a class="title" href="<%= element.link %>"><%= element.name %></a>
+                        <div class="muted"><%= element.description %></div>
+                        <div class="actions">
+                            <a class="btn btn-ghost small act-delete" href="#" data-action="delete" data-id="<%= element.id %>">Delete</a>
+                            <a class="btn btn-ghost small act-modify" href="#" data-action="modify" data-id="<%= element.id %>">Modify</a>
+                            <a class="btn btn-ghost small" href="<%= element.link %>">View</a>
+                        </div>
+                    </li>
+                <% }) %>
+            </ul>
+        </section>
+    </main>
 </body>
+<script>
+// Delegate actions to avoid inline JS issues
+document.addEventListener('click', function(e){
+    const target = e.target.closest('[data-action]');
+    if(!target) return;
+    e.preventDefault();
+    const id = parseInt(target.getAttribute('data-id'),10);
+    if(target.dataset.action === 'delete' && typeof _delete === 'function') {
+        _delete(id);
+    } else if(target.dataset.action === 'modify' && typeof _modify === 'function') {
+        _modify(id);
+    }
+});
+</script>
 </html>

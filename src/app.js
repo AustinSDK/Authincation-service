@@ -13,6 +13,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
+
 // Add cache-control headers to prevent caching issues
 app.use((req, res, next) => {
     res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
@@ -27,8 +28,9 @@ app.use((req, res, next) => {
 app.use((req,res,next)=>{
     if (!req.cookies || !req.cookies.token){
         req.user = false;
-    } else{
+    } else {
         let user = auth.getUserFromToken(req.cookies.token);
+
         if (user) {
             try {
                 // Handle case where permissions might be null, undefined, empty string, array, or malformed JSON
@@ -59,8 +61,8 @@ app.use((req,res,next)=>{
             req.user = false;
         }
     }
-    next()
-})
+    next();
+});
 
 let globalPermissions = []
 

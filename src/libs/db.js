@@ -1,7 +1,13 @@
 const sqlite3 = require("better-sqlite3");
 const path = require("path");
+const fs = require("fs");
 
-const db = new sqlite3(path.join(__dirname,'..','db','site.db'))
+const dbDir = path.join(__dirname, '..', 'db');
+if (!fs.existsSync(dbDir)) {
+    fs.mkdirSync(dbDir, { recursive: true });
+}
+
+const db = new sqlite3(path.join(dbDir, 'site.db'));
 
 const addColumnIfNotExists = (table, column, type) => {
     const stmt = db.prepare(`PRAGMA table_info(${table})`);
@@ -12,6 +18,7 @@ const addColumnIfNotExists = (table, column, type) => {
 };
 const migrate = () => {
     db.exec(`
+
 CREATE TABLE IF NOT EXISTS users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     username TEXT UNIQUE NOT NULL,
@@ -36,6 +43,7 @@ CREATE TABLE IF NOT EXISTS projects (
     time_stamp DATETIME DEFAULT CURRENT_TIMESTAMP
 );
     `);
+
     
     // Update existing records with null or empty permissions
     try {
@@ -66,6 +74,8 @@ CREATE TABLE IF NOT EXISTS projects (
         console.log('Note: Some database updates may have failed, this is normal for new databases.');
     }
 };
+
 migrate();
+
 
 module.exports = db
