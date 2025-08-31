@@ -135,6 +135,13 @@ app.get("/projects/create",(req,res)=>{
     res.render("create-project.ejs",{user:user,projects:projects});
 });
 
+app.get("/settings",(req,res,next)=>{
+    if (!req.user){
+        return res.redirect('/login');
+    }
+    res.redirect(`/user/${req.user.id}/settings`)
+})
+
 // user settings mhm
 app.get("/user/:id/settings", async (req,res,next)=>{
     let user = req.user

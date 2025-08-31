@@ -7,9 +7,7 @@
         <% if (user.permissions.includes('editor') || user.permissions.includes('admin')) { %>
           <li><a href="/projects">Projects</a></li>
         <% } %>
-        <% if (user.permissions.includes('admin')) { %>
           <li><a href="/settings">Settings</a></li>
-        <% } %>
         <li><a href="/logout" class="btn btn-ghost small">Logout</a></li>
       <% } else { %>
         <li><a href="/login">Login</a></li>
