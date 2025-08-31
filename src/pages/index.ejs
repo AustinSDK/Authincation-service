@@ -8,22 +8,25 @@
     <link rel="stylesheet" href="/css/index.css">
 </head>
 <body>
-    <h1>Welcome, <%= user.username %>!</h1>
-    <p>How are u? Anyways, here are some tools you may access:</p>
-    <h2>Tools</h2>
-    <% projects.forEach(element => { %>
-        <p>
-            <a href="<%= element.link %>"><%= element.name %></a>
-             - <%= element.description %>
-        </p>
-    <% }) %>
-    <br>
-    <% if (user.permissions.includes("editor") || user.permissions.includes("admin")) {%>
-        <a href="/projects">Projects</a>
-    <% } %>
-    <% if (true) {%>
-        <br>
-        <a href="/user/<%= user.id %>/settings">Settings</a>
-    <% } %>
+    <%- include('partials/nav', { user: user }) %>
+    <main class="container">
+        <header>
+            <h1>Welcome, <%= user.username %>!</h1>
+            <p style="margin-top:.25rem;" class="muted">Access the tools available to your role below.</p>
+        </header>
+        <section>
+            <h2>Tools</h2>
+            <ul class="project-list" style="margin-top:1rem;">
+            <% projects.forEach(element => { %>
+                <li class="project-card">
+                    <a class="title" href="<%= element.link %>"><%= element.name %></a>
+                    <div class="muted"><%= element.description %></div>
+                </li>
+            <% }) %>
+            </ul>
+        </section>
+    </main>
+    
+
 </body>
 </html>

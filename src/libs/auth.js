@@ -48,22 +48,26 @@ class mhm{
     constructor(express,db){
         this.db = db;
         this.router = express.Router();
-        this.router.post("/login", limiter, async (req,res)=>{
-
-            const {username,password} = req.body;
-            const user = this.db.prepare("SELECT * FROM users WHERE username LIKE ?").get(username);
+        this.router.post("/login", limiter, async (req, res) => {
+            const { username, password } = req.body;
+            if (!username || !password) {
+                return res.status(400).json({ message: "Username and password required" });
+            }
+            // Case-insensitive username lookup
+            const user = this.db.prepare("SELECT * FROM users WHERE LOWER(username) = LOWER(?)").get(username);
             if (!user) return res.status(400).json({ message: "Invalid credentials" });
 
-            const validify = await compare(user.password,password);
+            // Compare password with hash
+            const validify = await compare(user.password, password);
             if (!validify) return res.status(400).json({ message: "Invalid credentials" });
 
-            users[String(user.id)]=user;
+            users[String(user.id)] = user;
 
             const token = jwt.sign(
-                {userId:user.id},
+                { userId: user.id },
                 process.env.JWT_SECRET || "qsd90!h3l2$!@asdn1p9dfn12h*#asdnj2"
-            )
-            this.db.prepare("INSERT INTO tokens (uuid,token) VALUES (?,?)").run(user.id,token)
+            );
+            this.db.prepare("INSERT INTO tokens (uuid,token) VALUES (?,?)").run(user.id, token);
 
             res.cookie("token", token, {
                 httpOnly: true,
@@ -72,7 +76,7 @@ class mhm{
                 path: "/"
             });
             res.json({ message: "Login successful" });
-        })
+        });
         this.router.post("/register", limiter, async (req,res)=>{
             try {
                 const { username, password } = req.body;
@@ -160,6 +164,7 @@ class mhm{
             throw new Error("Failed to create account");
         }
     }
+
     getUserPermissions(uuid){
         let _users = users;
         let user;
@@ -233,6 +238,7 @@ class mhm{
         
         return result;
     }
+
     getUserTokens(uuid){
         return this.db.prepare("SELECT * FROM tokens WHERE uuid = ?").all(uuid);
     }
@@ -280,23 +286,19 @@ class mhm{
                 allowedProjects.push(project)
                 continue
             }
-
-            // check if u have the propper permissions
             let allow = true;
-            for (let i=0;i<project.permissions.length;i++){
-                let permission = project.permissions[i]
-                if (!permissions.includes(permission)){
+            for (let j = 0; j < project.permissions.length; j++) {
+                let permission = project.permissions[j];
+                if (!permissions || !permissions.includes(permission)) {
                     allow = false;
-                    break
+                    break;
                 }
             }
-            if (allow){
-                allowedProjects.push(project)
+            if (allow) {
+                allowedProjects.push(project);
             }
         }
-
-        // return allowed project
-        return allowedProjects
+        return allowedProjects;
     }
     getUserFromToken(token){
         let user = this.db.prepare(`SELECT * FROM tokens WHERE token = ?`).get(token);
@@ -315,8 +317,8 @@ class mhm{
         if (!x){
             return false
         }
-        users[String(x.id)] = x
-        return x
+        users[String(x.id)] = x;
+        return x;
     }
 }
 
