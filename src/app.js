@@ -14,16 +14,26 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-app.use((req,res,next)=>{
-    if (!req.cookies || !req.cookies.token){
+app.use((req, res, next) => {
+    if (!req.cookies || !req.cookies.token) {
         req.user = false;
-    } else{
+    } else {
         let user = auth.getUserFromToken(req.cookies.token);
-        user.permissions = JSON.parse(user.permissions)
-        req.user = user
+        if (user && user.permissions) {
+            try {
+                if (typeof user.permissions === 'string') {
+                    user.permissions = JSON.parse(user.permissions);
+                }
+            } catch (e) {
+                user.permissions = [];
+            }
+            req.user = user;
+        } else {
+            req.user = false;
+        }
     }
-    next()
-})
+    next();
+});
 
 let globalPermissions = []
 

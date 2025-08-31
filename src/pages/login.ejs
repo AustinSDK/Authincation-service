@@ -55,24 +55,25 @@
     </style>
 </head>
 <body>
-    <div id="form">
-        <h1>Login</h1>
-        <noscript>
-            <p style="text-align: center;"><a href="https://www.enable-javascript.com/">This app doesnt work without js :(</a></p>
-        </noscript>
-        <form action="" id="form">
-            <label for="username">Username:</label><br>
-            <input type="text" name="username" id="t_username">
-            <br>
-
-            <label for="password">Password:</label><br>
-            <input type="password" name="password" id="t_password">
-            <br>
-
-            <input type="submit" value="Login" disabled>
+    <%- include('partials/nav', { user: user }) %>
+    <main class="container">
+        <form action="" id="loginForm" class="auth-form">
+            <h1>Login</h1>
+            <noscript>
+                <p class="center" style="margin-top:0.5rem;"><a href="https://www.enable-javascript.com/">This app requires JavaScript.</a></p>
+            </noscript>
+            <div class="field">
+                <label for="t_username">Username</label>
+                <input type="text" name="username" id="t_username" autocomplete="username">
+            </div>
+            <div class="field">
+                <label for="t_password">Password</label>
+                <input type="password" name="password" id="t_password" autocomplete="current-password">
+            </div>
+            <input type="submit" value="Login" class="btn btn-accent" disabled>
+            <div class="alt-link"><a href="/register">Need an account? Sign up</a></div>
         </form>
-        <p style="color: rgb(212, 56, 56); text-align: center;"><a href="/register">Or signup!</a></p>
-    </div>
+    </main>
 </body>
 </html>
 <script>
@@ -93,7 +94,7 @@ function toToast(msg){
     }).showToast();
 }
 
-let form = document.getElementById("form");
+let form = document.getElementById("loginForm");
 
 let username = document.getElementById("t_username");
 let password = document.getElementById("t_password");

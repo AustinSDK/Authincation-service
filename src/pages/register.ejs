@@ -55,24 +55,28 @@
     </style>
 </head>
 <body>
-    <div id="form">
-        <h1>Signup</h1>
-        <noscript>
-            <p style="text-align: center;"><a href="https://www.enable-javascript.com/">This app doesnt work without js :(</a></p>
-        </noscript>
-        <form action="" id="form">
-            <label for="username">Username:</label><br>
-            <input type="text" name="username" id="t_username">
-            <br>
-
-            <label for="password">Password:</label><br>
-            <input type="password" name="password" id="t_password">
-            <br>
-
-            <input type="submit" value="Signup" disabled>
+    <%- include('partials/nav', { user: user }) %>
+    <main class="container">
+        <form action="" id="registerForm" class="auth-form">
+            <h1>Signup</h1>
+            <noscript>
+                <p class="center" style="margin-top:0.5rem;"><a href="https://www.enable-javascript.com/">This app requires JavaScript.</a></p>
+            </noscript>
+            <div class="field">
+                <label for="t_username">Username</label>
+                <input type="text" name="username" id="t_username" autocomplete="username">
+            </div>
+            <div class="field">
+                <label for="t_password">Password</label>
+                <div class="pw-wrapper">
+                    <input type="password" name="password" id="t_password" autocomplete="new-password">
+                    <button type="button" id="togglePassword" class="toggle-pw" tabindex="-1" aria-label="Toggle Password Visibility">👁️</button>
+                </div>
+            </div>
+            <input type="submit" value="Signup" class="btn btn-accent" disabled>
+            <div class="alt-link"><a href="/login">Already have an account? Login</a></div>
         </form>
-        <p style="color: rgb(212, 56, 56); text-align: center;"><a href="/login">Or login!</a></p>
-    </div>
+    </main>
 </body>
 </html>
 <script>
@@ -93,15 +97,27 @@ function toToast(msg){
     }).showToast();
 }
 
-let form = document.getElementById("form");
+let form = document.getElementById("registerForm");
+
 
 let username = document.getElementById("t_username");
-let password = document.getElementById("t_username");
+let password = document.getElementById("t_password");
 
 let submit = document.querySelector("form input[type=\"submit\"]:disabled")
 
+
 document.addEventListener("DOMContentLoaded",e=>{
     submit.disabled = false;
+    const togglePassword = document.getElementById("togglePassword");
+    togglePassword.addEventListener("click", function() {
+        if (password.type === "password") {
+            password.type = "text";
+            togglePassword.textContent = "🙈";
+        } else {
+            password.type = "password";
+            togglePassword.textContent = "👁️";
+        }
+    });
 })
 
 form.addEventListener("submit",async e=>{

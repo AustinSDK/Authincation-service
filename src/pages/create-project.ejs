@@ -1,206 +1,99 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login</title>
-    <link rel="stylesheet" href="/css/main.css">
-    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
-    <style>
-        div#form{
-            background-color: rgb(19, 19, 19);
-            width: 25%;
-            padding: 10px;
-            margin: 0 auto;
-        }
-        h1{
-            text-align: center;
-        }
-        form{
-            background-color: rgb(15, 15, 15);
-            padding: 5px;
-        }
-        form br{
-            margin-block: 3px;
-        }
-        form {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-        form input[type="text"], form input[type="password"]{
-            background: none;
-            border: none;
-            border-bottom: 1px rgb(139, 139, 139) solid;
-            color: white;
-            width: 55%; 
-        }
-        form input[type="submit"], button{
-            padding: 6px;
-            margin-top: 10px;
-            background-color: rgb(190, 81, 54);
-            border: none;
-            border: 1px black solid;
-            border-radius: 5px;
-            color: white;
-            width: 55%;
-            cursor:pointer;
-        }
-        button{
-            width: max-content;
-        }
-        form input[type="submit"]:disabled{
-            background-color: rgb(109, 47, 32);
-            color: white;
-            cursor:not-allowed;
-        }
-        table{
-            width: 100%;
-            text-align: center;
-        }
-        table{
-            background-color: rgb(27, 27, 27);
-        }
-        table tbody tr, table thead th{
-            background-color: rgb(14, 14, 14);
-        }
-        #left-right {
-            width: 100%;
-            display: flex;
-        }
-        #left-right button {
-            flex: 1 1 0;
-            margin: 0 2px;
-            width: auto;
-        }
-    </style>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Create Project</title>
+        <link rel="stylesheet" href="/css/main.css" />
+        <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css" />
+        <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
 </head>
 <body>
-    <div id="form">
-        <h1>Create Project</h1>
-        <noscript>
-            <p style="text-align: center;"><a href="https://www.enable-javascript.com/">This app doesnt work without js :(</a></p>
-        </noscript>
-        <form action="" id="form">
-            <label for="username">Name:</label><br>
-            <input type="text" name="username" id="t_username">
-            <br>
-            <label for="description">Description:</label><br>
-            <input type="text" name="description" id="t_description">
-            <br>
-            <label for="link">Link:</label><br>
-            <input type="text" name="link" id="t_link">
-            <br>
-            <table>
-                <caption>User Permissions</caption>
-                <thead>
-                    <tr>
-                        <th>Permissions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                </tbody>
-                <script>
-                    function add(){
-                        let perm = String(prompt("Permission: ")).toLowerCase()
-                        let tr = document.createElement("tr")
-                        let td = document.createElement("td")
-                        td.innerText = perm
-                        tr.appendChild(td)
-                        document.querySelector("table > tbody").appendChild(tr)
-                    }
-                    function removeall(){
-                        document.querySelector("table > tbody").replaceChildren()
-                    }
-                </script>
-            </table>
-            <div id="left-right">
-                <button onclick="add()">Add</button>
-                <button onclick="removeall()">Clear</button>
-            </div>
-
-            <input type="submit" value="Create Project" disabled>
-        </form>
-    </div>
+        <%- include('partials/nav', { user: user }) %>
+        <main class="container">
+                <form id="createProjectForm" class="auth-form" autocomplete="off">
+                        <h1 style="margin-bottom:.25rem;">Create Project</h1>
+                        <p class="muted center" style="margin-top:0;">Define a name, optional description, link and permissions.</p>
+                        <div class="field">
+                                <label for="t_username">Name</label>
+                                <input type="text" id="t_username" maxlength="60" />
+                        </div>
+                        <div class="field">
+                                <label for="t_description">Description</label>
+                                <input type="text" id="t_description" maxlength="140" />
+                        </div>
+                        <div class="field">
+                                <label for="t_link">Link</label>
+                                <input type="text" id="t_link" placeholder="/" />
+                        </div>
+                        <div class="field">
+                                <label>Permissions</label>
+                                <div class="permission-editor">
+                                        <div class="chips" id="permChips" aria-live="polite"></div>
+                                        <div class="perm-add-row">
+                                                <input type="text" id="permInput" placeholder="Type permission & Enter" aria-label="Add permission" />
+                                                <button type="button" id="clearPerms" class="btn btn-ghost small" title="Clear all">Clear</button>
+                                        </div>
+                                        <p class="muted" style="font-size:.65rem; margin:.4rem 0 0;">Examples: viewer, editor, analytics</p>
+                                </div>
+                        </div>
+                        <input type="submit" value="Create Project" class="btn btn-accent" disabled />
+                        <div class="alt-link"><a href="/projects">Back to projects</a></div>
+                </form>
+        </main>
 </body>
 </html>
 <script>
-
 function toToast(msg){
-    Toastify({
-        text: msg,
-        duration: 3000,
-        newWindow: false,
-        close: false,
-        gravity: "top", // `top` or `bottom`
-        position: "right", // `left`, `center` or `right`
-        stopOnFocus: true, // Prevents dismissing of toast on hover
-        style: {
-            background: "rgb(212, 56, 56)",
-            color:"white"
-        },
-    }).showToast();
+    Toastify({ text: msg, duration: 3000, gravity: 'top', position: 'right', style:{ background: 'rgb(212,56,56)', color:'#fff' } }).showToast();
 }
 
-let form = document.getElementById("form");
+const form = document.getElementById('createProjectForm');
+const submit = form.querySelector('input[type="submit"]');
+const permInput = document.getElementById('permInput');
+const permChips = document.getElementById('permChips');
+const clearPermsBtn = document.getElementById('clearPerms');
 
-let submit = document.querySelector("form input[type=\"submit\"]")
+document.addEventListener('DOMContentLoaded', () => { submit.disabled = false; });
 
-document.addEventListener("DOMContentLoaded",e=>{
-    submit.disabled = false;
-})
+function getPerms(){
+    return Array.from(permChips.querySelectorAll('.chip')).map(c => c.dataset.value);
+}
+function addPerm(raw){
+    const v = (raw || '').trim().toLowerCase();
+    if(!v) return; if(getPerms().includes(v)) return toToast('Permission exists');
+    const chip = document.createElement('button');
+    chip.type='button';
+    chip.className='chip';
+    chip.dataset.value=v;
+    chip.innerHTML = `<span>${v}</span><span class="x" aria-label="Remove">×</span>`;
+    chip.addEventListener('click', ()=> chip.remove());
+    permChips.appendChild(chip);
+}
+permInput.addEventListener('keydown', e => { if(e.key==='Enter'){ e.preventDefault(); addPerm(permInput.value); permInput.value=''; }});
+clearPermsBtn.addEventListener('click', ()=> { permChips.innerHTML=''; });
 
-form.addEventListener("submit",async (e)=>{
-    e.preventDefault()
+form.addEventListener('submit', async e => {
+    e.preventDefault();
     submit.disabled = true;
-    let children = document.querySelector("table > tbody").children
-    console.log(children)
-    let _childs = []
-    for (let i = 0; i<children.length; i++){
-        _childs.push(children[i].innerText)
-    }
-    
-    // Get form data
-    let name = document.getElementById("t_username").value;
-    let description = document.getElementById("t_description").value;
-    let link = document.getElementById("t_link").value;
-    
-    if (!name.trim()) {
-        toToast("Project name is required");
-        submit.disabled = false;
-        return;
-    }
-    
+    const name = document.getElementById('t_username').value;
+    const description = document.getElementById('t_description').value;
+    const link = document.getElementById('t_link').value || '/';
+    const permissions = getPerms();
+    if(!name.trim()){ toToast('Project name is required'); submit.disabled=false; return; }
     try {
-        let _fetch = await fetch("/projects/create", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                name: name,
-                description: description,
-                link: link,
-                permissions: _childs
-            })
-        });
-        
-        let response = await _fetch.json();
-        
-        if (_fetch.ok) {
-            toToast("Project created successfully!");
-            // Redirect to projects page after a short delay
-            setTimeout(() => {
-                window.location.href = "/projects";
-            }, 1000);
+        const _fetch = await fetch('/projects/create', { method:'POST', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify({ name, description, link, permissions }) });
+        const response = await _fetch.json();
+        if(_fetch.ok){
+            toToast('Project created');
+            setTimeout(()=> { window.location.href='/projects'; }, 800);
         } else {
-            toToast(response.message || "Failed to create project");
+            toToast(response.message || 'Failed to create');
             submit.disabled = false;
         }
-    } catch (error) {
-        toToast("Error creating project: " + error.message);
+    } catch(err){
+        toToast('Error: '+ err.message);
         submit.disabled = false;
     }
-})
+});
 </script>
