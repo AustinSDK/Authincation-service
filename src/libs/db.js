@@ -3,6 +3,13 @@ const path = require("path");
 
 const db = new sqlite3(path.join(__dirname,'..','db','site.db'))
 
+const addColumnIfNotExists = (table, column, type) => {
+    const stmt = db.prepare(`PRAGMA table_info(${table})`);
+    const columns = stmt.all().map(row => row.name);
+    if (!columns.includes(column)) {
+        db.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${type}`);
+    }
+};
 const migrate = () => {
     db.exec(`
 CREATE TABLE IF NOT EXISTS users (
