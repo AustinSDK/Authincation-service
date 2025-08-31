@@ -97,6 +97,17 @@ app.get("/projects/create",(req,res)=>{
     res.render("create-project.ejs",{user:user,projects:projects});
 });
 
+// user settings mhm
+app.get("/user/:id/settings", async (req,res,next)=>{
+    let user = req.user
+    let id = req.params.id
+    if (!user || (user.id !== id && (!user.permissions.includes("admin")))){
+        res.redirect("/login")
+    }
+    res.render("user-settings")
+})
+
+// projects creation :shrug:
 app.post("/projects/create",(req,res)=>{
     let user = req.user
     if (!user){

@@ -165,6 +165,9 @@ class mhm{
         
         return result;
     }
+    getUserTokens(uuid){
+        return this.db.prepare("SELECT * FROM tokens WHERE uuid = ?").all(uuid);
+    }
     getProjects(permissions){
         let allowedProjects = []
 

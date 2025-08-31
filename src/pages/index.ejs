@@ -21,9 +21,9 @@
     <% if (user.permissions.includes("editor") || user.permissions.includes("admin")) {%>
         <a href="/projects">Projects</a>
     <% } %>
-    <% if (user.permissions.includes("admin")) {%>
+    <% if (true) {%>
         <br>
-        <a href="/settings">Settings</a>
+        <a href="/user/<%= user.id %>/settings">Settings</a>
     <% } %>
 </body>
 </html>
