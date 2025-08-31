@@ -39,7 +39,7 @@ CREATE TABLE IF NOT EXISTS projects (
     
     // Update existing records with null or empty permissions
     try {
-        db.prepare("UPDATE users SET permissions = '[]' WHERE permissions IS NULL OR permissions = ''").run();
+        db.prepare("UPDATE users SET permissions = '[]' WHERE permissions IS NULL OR TRIM(permissions) = ''").run();
         db.prepare("UPDATE projects SET permissions = '[]' WHERE permissions IS NULL OR permissions = ''").run();
         
         // Also handle any malformed JSON strings by setting them to empty arrays
