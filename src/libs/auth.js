@@ -48,7 +48,7 @@ class mhm{
                 let x = await this.createAccount(username,password)
             } catch (e){
                 return res.status(400).json({
-                    message:e
+                    message: e.message || String(e)
                 })
             }
             return res.status(201).json({
