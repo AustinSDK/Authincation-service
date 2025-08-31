@@ -178,7 +178,7 @@ app.get("/delete",(req,res)=>{
     res.send(auth.deleteProject(req.query.id))
 })
 
-const port = process.env.port
+const port = process.env.PORT
 app.listen(port,e=>{
     if (e){
         console.error(e);
