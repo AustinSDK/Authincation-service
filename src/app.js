@@ -8,8 +8,7 @@ const fs = require("fs")
 const express = require("express");
 const app = express();
 const cookieParser = require('cookie-parser');
-const { stringify } = require("querystring");
-const { date } = require("joi");
+const auth = require("./libs/auth")(express,db);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
@@ -20,6 +19,9 @@ app.use((req, res, next) => {
     res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
     res.set('Pragma', 'no-cache');
     res.set('Expires', '0');
+    res.set('X-Frame-Options', 'DENY');
+    res.set('X-Content-Type-Options', 'nosniff');
+    res.set('X-XSS-Protection', '1; mode=block');
     next();
 });
 
@@ -64,7 +66,6 @@ app.use((req,res,next)=>{
 
 let globalPermissions = []
 
-const auth = require("./libs/auth")(express,db);
 app.use(auth.router);
 
 app.set("views", path.join(__dirname, "pages"));
@@ -137,11 +138,11 @@ app.get("/projects/create",(req,res)=>{
 // user settings mhm
 app.get("/user/:id/settings", async (req,res,next)=>{
     let user = req.user
-    let id = req.params.id
+    let id = parseInt(req.params.id, 10)
     if (!user || (user.id !== id && (!user.permissions.includes("admin")))){
         return res.redirect("/login")
     }
-    res.render("user-settings",{tokens:auth.getUserTokens(req.params.id),user:req.user})
+    res.render("user-settings",{tokens:auth.getUserTokens(id),user:req.user})
 })
 
 // projects creation :shrug:
@@ -149,6 +150,11 @@ app.post("/projects/create",(req,res)=>{
     let user = req.user
     if (!user){
         return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    // Check if user has proper permissions to create projects
+    if (!user.permissions.includes("admin") && !user.permissions.includes("editor")) {
+        return res.status(403).json({ message: "Insufficient permissions to create projects" });
     }
     
     try {
@@ -167,17 +173,27 @@ app.post("/projects/create",(req,res)=>{
         return res.status(400).json({ message: error.message });
     }
 });
-app.get("/delete",(req,res)=>{
+app.post("/projects/delete",(req,res)=>{
     let user = req.user
     if (!user || !user.permissions){
-        return res.redirect("/login")
+        return res.status(401).json({ message: "Unauthorized" });
     }
     
-    if (!req.query || !req.query.id){
-        return res.status(400).send("Giveme ID")
+    if (!req.body || !req.body.id){
+        return res.status(400).json({ message: "Project ID is required" });
     }
     
-    res.send(auth.deleteProject(req.query.id))
+    // Check if user has admin permissions or is the project owner
+    if (!user.permissions.includes("admin")) {
+        return res.status(403).json({ message: "Insufficient permissions" });
+    }
+    
+    try {
+        const result = auth.deleteProject(parseInt(req.body.id, 10));
+        res.json({ message: "Project deleted successfully", result });
+    } catch (error) {
+        res.status(500).json({ message: "Error deleting project" });
+    }
 })
 
 const port = process.env.PORT
