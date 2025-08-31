@@ -14,6 +14,15 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
+app.use((req,res,next)=>{
+    if (!req.cookies || !req.cookies.token){
+        req.user = false;
+    } else{
+        req.user = auth.getUserFromToken(req.cookies.token);
+    }
+    next()
+})
+
 const auth = require("./libs/auth")(express,db);
 app.use(auth.router);
 
@@ -46,14 +55,11 @@ app.get("/login",async (req,res,next)=>{
 
 // Static file paths
 app.get("/",(req,res)=>{
-    if (!req.cookies || !req.cookies.token){
-        return res.redirect("/login")
-    }
-    let user = auth.getUserFromToken(req.cookies.token);
+    let user = req.user
     if (!user){
         res.redirect("/login")
     }
-    res.render("index.ejs",{token:stringify(user),time:(_end-_start/1000)});
+    res.render("index.ejs",{token:stringify(user)});
 });
 
 const port = process.env.port
