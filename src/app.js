@@ -159,7 +159,17 @@ app.get("/project/:id", async (req,res,next)=>{
     if (!user || !user.permissions.includes("editor") && !user.permissions.includes("admin")){
         return res.redirect("/login")
     }
-    res.render("modify-project",{tokens:auth.getUserTokens(id),user:req.user})
+    let project = auth.getProjectFromId(id)
+    if (!project){
+        return res.redirect("/projects")
+    }
+    res.render("modify-project",{tokens:auth.getUserTokens(id),user:req.user,project:project})
+})
+
+// logout!!!!!
+app.get('/logout',(req,res,next)=>{
+    auth.db.prepare("DELETE FROM tokens WHERE token = ?").run(req.user.token)
+    return res.redirect("/")
 })
 
 // projects creation :shrug:
@@ -185,6 +195,39 @@ app.post("/projects/create",(req,res)=>{
         res.json({ 
             message: "Project created successfully",
             projectId: result.lastInsertRowid
+        });
+    } catch (error) {
+        return res.status(400).json({ message: error.message });
+    }
+});
+
+// projects update
+app.post("/projects/update",(req,res)=>{
+    let user = req.user
+    if (!user){
+        return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    // Check if user has proper permissions to update projects
+    if (!user.permissions.includes("admin") && !user.permissions.includes("editor")) {
+        return res.status(403).json({ message: "Insufficient permissions to update projects" });
+    }
+    
+    try {
+        const { id, name, description, link, permissions } = req.body;
+        
+        if (!id) {
+            return res.status(400).json({ message: "Project ID is required" });
+        }
+        
+        if (!name || !name.trim()) {
+            return res.status(400).json({ message: "Project name is required" });
+        }
+        
+        const result = auth.updateProject(parseInt(id, 10), name.trim(), description || "", link || "/", permissions || []);
+        res.json({ 
+            message: "Project updated successfully",
+            result
         });
     } catch (error) {
         return res.status(400).json({ message: error.message });

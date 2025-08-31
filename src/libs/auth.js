@@ -145,7 +145,9 @@ class mhm{
             }
         })
     }
-
+    getProjectFromId(id){
+        return this.db.prepare("SELECT * FROM projects WHERE id = ?").get(id)
+    }
     createAccount = async (username, password, perms="[]") => {
         try {
             const existingUser = this.db.prepare("SELECT * FROM users WHERE username LIKE ?").get(username);
@@ -205,7 +207,6 @@ class mhm{
         }
     }
     deleteProject(id){
-        console.log(id)
         let x = this.db.prepare("DELETE FROM projects WHERE id = ?").run(id)
         _projects_chached = false; // Clear cache when project is deleted
         return x
@@ -231,6 +232,47 @@ class mhm{
             description || "",
             link || "/",
             permissionsJson
+        );
+        
+        // Clear projects cache to force refresh
+        _projects_chached = false;
+        
+        return result;
+    }
+
+    updateProject(id, name, description, link, permissions) {
+        // Validate project ID
+        if (!id) {
+            throw new Error("Project ID is required");
+        }
+        
+        // Validate project name
+        if (!name || !name.trim()) {
+            throw new Error("Project name is required");
+        }
+        
+        // Check if project exists
+        const existingProject = this.db.prepare("SELECT * FROM projects WHERE id = ?").get(id);
+        if (!existingProject) {
+            throw new Error("Project not found");
+        }
+        
+        // Check if another project with same name already exists (excluding current project)
+        const duplicateProject = this.db.prepare("SELECT * FROM projects WHERE name = ? AND id != ?").get(name.trim(), id);
+        if (duplicateProject) {
+            throw new Error("Another project with this name already exists");
+        }
+        
+        // Convert permissions array to JSON string
+        const permissionsJson = JSON.stringify(permissions || []);
+        
+        // Update project
+        const result = this.db.prepare("UPDATE projects SET name = ?, description = ?, link = ?, permissions = ? WHERE id = ?").run(
+            name.trim(),
+            description || "",
+            link || "/",
+            permissionsJson,
+            id
         );
         
         // Clear projects cache to force refresh
