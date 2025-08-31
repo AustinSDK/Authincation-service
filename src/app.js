@@ -55,6 +55,10 @@ app.use((req,res,next)=>{
                 console.error('Permissions type:', typeof user.permissions);
                 user.permissions = [];
             }
+            user.admin = false
+            if (user.permissions.includes("admin")){
+                user.admin = true
+            }
             user.token = req.cookies.token;
             req.user = user;
         } else {
@@ -142,7 +146,7 @@ app.get("/settings",(req,res,next)=>{
     res.redirect(`/user/${req.user.id}/settings`)
 })
 
-// user settings mhm
+// user specfic stuff
 app.get("/user/:id/settings", async (req,res,next)=>{
     let user = req.user
     let id = parseInt(req.params.id, 10)
