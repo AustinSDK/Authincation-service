@@ -40,9 +40,18 @@ class mhm{
             });
             res.json({ message: "Login successful" });
         })
+        this.router.post("/register",async (req,res)=>{
+
+            const {username,password} = req.body;
+            const user = this.db.prepare("SELECT * FROM users WHERE username LIKE ?").get(username);
+            if (user) return res.status(400).json({ message: "Heyyyy, DONT USE THAT" });
+
+            let x = await this.createAccount(username,password)
+            return res.send(x)
+        })
     }
 
-    createAccount = async (username, password) => {
+    createAccount = async (username, password, perms="[]") => {
         const existingUser = this.db.prepare("SELECT * FROM users WHERE username LIKE ?").get(username);
         console.log(existingUser);
         if (existingUser) {
@@ -51,7 +60,7 @@ class mhm{
 
         // hash password and insert new user
         const hashedPassword = await hash(password);
-        return this.db.prepare("INSERT INTO users (username, password) VALUES (?, ?)").run(username, hashedPassword);
+        return this.db.prepare("INSERT INTO users (username, password, permissions) VALUES (?, ?, ?)").run(username, hashedPassword,perms);
     }
 }
 

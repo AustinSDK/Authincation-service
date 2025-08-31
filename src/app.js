@@ -33,12 +33,9 @@ app.get("/css/:path",(req,res,next)=>{
 });
 
 // TODO: make a basic user auth
-// app.get("/createuser",async (req,res,next)=>{
-//     let username = req.query.username;
-//     let password = req.query.password;
-
-//     return res.send(await auth.createAccount(username,password))
-// })
+app.get("/register",async (req,res,next)=>{
+    res.render("register.ejs")
+})
 
 // Static file paths
 app.get("/",(req,res)=>{
