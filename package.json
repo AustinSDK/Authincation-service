@@ -25,6 +25,7 @@
     "argon2": "^0.44.0",
     "bcryptjs": "^3.0.2",
     "better-sqlite3": "^12.2.0",
+    "cookie-parser": "^1.4.7",
     "dotenv": "^17.2.1",
     "ejs": "^3.1.10",
     "express": "^5.1.0",

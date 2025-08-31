@@ -7,8 +7,12 @@ const fs = require("fs")
 
 const express = require("express");
 const app = express();
+const cookieParser = require('cookie-parser');
+const { stringify } = require("querystring");
+const { date } = require("joi");
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
 
 const auth = require("./libs/auth")(express,db);
 app.use(auth.router);
@@ -42,7 +46,17 @@ app.get("/login",async (req,res,next)=>{
 
 // Static file paths
 app.get("/",(req,res)=>{
-    res.render("index.ejs");
+    console.log(req.cookies)
+    console.log(1)
+    if (!req.cookies || !req.cookies.token){
+        return res.redirect("/login")
+    }
+    console.log(2)
+    let user = auth.getUserFromToken(req.cookies.token);
+    if (!user){
+        res.redirect("/login")
+    }
+    res.render("index.ejs",{token:stringify(user),time:(_end-_start/1000)});
 });
 
 const port = process.env.port

@@ -113,6 +113,27 @@ class mhm{
         const hashedPassword = await hash(password);
         return this.db.prepare("INSERT INTO users (username, password, permissions) VALUES (?, ?, ?)").run(username, hashedPassword,perms);
     }
+    getUserFromToken(token){
+        console.log(`x: ${token}`)
+        let user = this.db.prepare(`SELECT * FROM tokens WHERE token = ?`).get(token);
+        if (!user){
+            console.log(false)
+            return false
+        }
+        let id = user.uuid
+        let _users = users
+        for (let i=0;i<_users.length;i++){
+            if (id == _users[i].id){
+                return _users[i]
+            }
+        }
+        let x = this.db.prepare("SELECT * FROM users WHERE id = ?").get(id);
+        if (!x){
+            return false
+        }
+        users[String(x.id)] = x
+        return x
+    }
 }
 
 module.exports = (express,db)=>{
