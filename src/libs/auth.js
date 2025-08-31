@@ -43,10 +43,14 @@ class mhm{
         this.router.post("/register",async (req,res)=>{
 
             const {username,password} = req.body;
-            const user = this.db.prepare("SELECT * FROM users WHERE username LIKE ?").get(username);
-            if (user) return res.status(400).json({ message: "too late" });
 
-            let x = await this.createAccount(username,password)
+            try{
+                let x = await this.createAccount(username,password)
+            } catch (e){
+                return res.status(400).json({
+                    message:e
+                })
+            }
             return res.status(201).json({
                 message: "Created user account successfully!"
             })
@@ -54,6 +58,11 @@ class mhm{
     }
 
     createAccount = async (username, password, perms="[]") => {
+        let blocked = ['admin','root','webmaster','test','null'];
+        username = String(username).toLowerCase()
+        if (blocked.includes(username)){
+            throw new Error("Unallowed username");
+        }
         const existingUser = this.db.prepare("SELECT * FROM users WHERE username LIKE ?").get(username);
         if (existingUser) {
             throw new Error("Account already exists");
