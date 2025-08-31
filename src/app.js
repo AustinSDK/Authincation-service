@@ -18,7 +18,9 @@ app.use((req,res,next)=>{
     if (!req.cookies || !req.cookies.token){
         req.user = false;
     } else{
-        req.user = auth.getUserFromToken(req.cookies.token);
+        let user = auth.getUserFromToken(req.cookies.token);
+        user.permissions = JSON.parse(user.permissions)
+        req.user = user
     }
     next()
 })
@@ -47,6 +49,20 @@ app.get("/css/:path",(req,res,next)=>{
     res.sendFile(_path);
 });
 
+// js paths
+app.get("/js/:path",(req,res,next)=>{
+    // get path
+    const js_path = path.join(__dirname,'js');
+    const _path = path.join(js_path,req.params.path);
+
+    // check path to make sure its real
+    if (!_path.startsWith(js_path)) return next();
+
+    // send file
+    if (!fs.existsSync(_path)) return next();
+    res.sendFile(_path);
+});
+
 // User auth endpoints? static.
 app.get("/register",async (req,res,next)=>{
     res.render("register.ejs")
@@ -62,9 +78,28 @@ app.get("/",(req,res)=>{
         res.redirect("/login")
     }
     let projects = auth.getProjects(user.permissions)
-    user.permissions = JSON.parse(user.permissions)
     res.render("index.ejs",{user:user,projects:projects});
 });
+app.get("/projects",(req,res)=>{
+    let user = req.user
+    if (!user){
+        res.redirect("/login")
+    }
+    let projects = auth.getProjects(user.permissions)
+    res.render("projects.ejs",{user:user,projects:projects});
+});
+app.get("/delete",(req,res)=>{
+    let user = req.user
+    if (!user || !user.permissions){
+        res.redirect("/login")
+    }
+    
+    if (!req.query || !req.query.id){
+        return res.status(400).send("Giveme ID")
+    }
+    
+    res.send(auth.deleteProject(req.query.id))
+})
 
 const port = process.env.port
 app.listen(port,e=>{

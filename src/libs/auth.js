@@ -132,6 +132,12 @@ class mhm{
         }
         return JSON.parse(user.permissions)
     }
+    deleteProject(id){
+        console.log(id)
+        let x = this.db.prepare("DELETE FROM projects WHERE id = ?").run(id)
+        projects = this.db.prepare("SELECT * FROM projects")
+        return x
+    }
     getProjects(permissions){
         let allowedProjects = []
 

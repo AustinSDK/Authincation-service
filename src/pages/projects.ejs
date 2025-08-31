@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Projects</title>
+    <link rel="stylesheet" href="/css/main.css">
+    <link rel="stylesheet" href="/css/index.css">
+    <script src="/js/projects.js"></script>
+</head>
+<body>
+    <h1>Projects</h1>
+    <% projects.forEach(element => { %>
+        <p>
+            <a href="<%= element.link %>"><%= element.name %></a>
+             - <%= element.description %>
+        </p>
+        <p>
+            <a href="#" onclick="javascript:_delete(<%= element.id %>)">> Delete</a>
+            <a href="#" onclick="javascript:_modify(<%= element.id %>)">> Modify</a>
+            <a href="#" onclick="javascript:_modify(<%= element.id %>)">> View</a>
+        </p>
+        <br>
+    <% }) %>
+</body>
+</html>
