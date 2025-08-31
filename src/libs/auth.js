@@ -104,6 +104,40 @@ class mhm{
                 });
             }
         })
+        this.router.post("/logout", async (req,res)=>{
+            try {
+                const { tokenId } = req.body;
+                
+                if (!tokenId) {
+                    return res.status(400).json({ message: "Token ID is required" });
+                }
+
+                // Verify user is authenticated
+                if (!req.user) {
+                    return res.status(401).json({ message: "Unauthorized" });
+                }
+
+                // Get the token to verify ownership or admin privileges
+                const tokenRecord = this.db.prepare("SELECT * FROM tokens WHERE id = ?").get(tokenId);
+                if (!tokenRecord) {
+                    return res.status(404).json({ message: "Token not found" });
+                }
+
+                // Check if user owns the token or is an admin
+                const userPermissions = req.user.permissions || [];
+                if (tokenRecord.uuid !== req.user.id && !userPermissions.includes('admin')) {
+                    return res.status(403).json({ message: "Permission denied" });
+                }
+
+                // Delete the token
+                this.logoutToken(tokenId);
+                
+                res.json({ message: "Token logged out successfully" });
+            } catch (error) {
+                console.error("Logout error:", error);
+                res.status(500).json({ message: "Internal server error" });
+            }
+        })
     }
 
     createAccount = async (username, password, perms="[]") => {
@@ -119,17 +153,41 @@ class mhm{
     getUserPermissions(uuid){
         let _users = users;
         let user;
-        for (let i=0;i<_users.length;i++){
-            if (uuid == _users[i].id){
-                user = _users[i]
-                break
+        
+        // Check if user is already cached
+        if (_users[String(uuid)]) {
+            user = _users[String(uuid)];
+        } else {
+            user = this.db.prepare(`SELECT * FROM users WHERE id = ?`).get(uuid);
+            if (user) {
+                users[String(user.id)] = user;
             }
         }
-        if (!user){
-            user = this.db.prepare(`SELECT * FROM users WHERE id = ?`).get(uuid);
-            users[String(user.id)] = user;
+        
+        if (!user) {
+            return [];
         }
-        return JSON.parse(user.permissions)
+        
+        try {
+            if (!user.permissions) {
+                return [];
+            } else if (Array.isArray(user.permissions)) {
+                return user.permissions;
+            } else if (typeof user.permissions === 'string') {
+                if (user.permissions.trim() === '') {
+                    return [];
+                } else {
+                    return JSON.parse(user.permissions);
+                }
+            } else {
+                return [];
+            }
+        } catch (error) {
+            console.error('Error parsing user permissions:', error);
+            console.error('Problematic permissions value:', user.permissions);
+            console.error('Permissions type:', typeof user.permissions);
+            return [];
+        }
     }
     deleteProject(id){
         console.log(id)
@@ -165,6 +223,12 @@ class mhm{
         
         return result;
     }
+    getUserTokens(uuid){
+        return this.db.prepare("SELECT * FROM tokens WHERE uuid = ?").all(uuid);
+    }
+    logoutToken(tokenId){
+        return this.db.prepare("DELETE FROM tokens WHERE id = ?").run(tokenId);
+    }
     getProjects(permissions){
         let allowedProjects = []
 
@@ -182,8 +246,29 @@ class mhm{
             let project = _projects[i];
 
             // check if its just empty
-            project.permissions = JSON.parse(project.permissions)
-            if (!project.permissions || project.permissions == 0 || permissions.includes("admin")){
+            try {
+                if (!project.permissions) {
+                    project.permissions = [];
+                } else if (Array.isArray(project.permissions)) {
+                    // Already an array, use as is
+                    project.permissions = project.permissions;
+                } else if (typeof project.permissions === 'string') {
+                    if (project.permissions.trim() === '') {
+                        project.permissions = [];
+                    } else {
+                        project.permissions = JSON.parse(project.permissions);
+                    }
+                } else {
+                    project.permissions = [];
+                }
+            } catch (error) {
+                console.error('Error parsing project permissions:', error);
+                console.error('Problematic permissions value:', project.permissions);
+                console.error('Permissions type:', typeof project.permissions);
+                project.permissions = [];
+            }
+            
+            if (!project.permissions || project.permissions.length === 0 || permissions.includes("admin")){
                 allowedProjects.push(project)
                 continue
             }
@@ -212,11 +297,12 @@ class mhm{
         }
         let id = user.uuid
         let _users = users
-        for (let i=0;i<_users.length;i++){
-            if (id == _users[i].id){
-                return _users[i]
-            }
+        
+        // Check if user is already cached
+        if (_users[String(id)]) {
+            return _users[String(id)];
         }
+        
         let x = this.db.prepare("SELECT * FROM users WHERE id = ?").get(id);
         if (!x){
             return false
