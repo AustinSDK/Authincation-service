@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Register</title>
     <link rel="stylesheet" href="/css/main.css">
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
     <style>
         div#form{
             background-color: rgb(19, 19, 19);
@@ -75,6 +77,23 @@
 </body>
 </html>
 <script>
+
+function toToast(msg){
+    Toastify({
+        text: msg,
+        duration: 3000,
+        newWindow: false,
+        close: false,
+        gravity: "top", // `top` or `bottom`
+        position: "right", // `left`, `center` or `right`
+        stopOnFocus: true, // Prevents dismissing of toast on hover
+        style: {
+            background: "rgb(212, 56, 56)",
+            color:"white"
+        },
+    }).showToast();
+}
+
 let form = document.getElementById("form");
 
 let username = document.getElementById("t_username");
@@ -97,8 +116,11 @@ form.addEventListener("submit",async e=>{
         method: "POST",
         body: JSON.stringify({username:username.value,password:password.value})
     });
-    let response = await _fetch.text();
-    alert(response);
-    submit.disabled = false;
+    let response = await _fetch.json();
+    let status = _fetch.status;
+    response = response['message'];
+    toToast(response);
+    if (status !== 201) return submit.disabled = false;
+    window.location.href = "/login"
 })
 </script>

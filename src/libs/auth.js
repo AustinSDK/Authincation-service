@@ -44,10 +44,12 @@ class mhm{
 
             const {username,password} = req.body;
             const user = this.db.prepare("SELECT * FROM users WHERE username LIKE ?").get(username);
-            if (user) return res.status(400).json({ message: "Heyyyy, DONT USE THAT" });
+            if (user) return res.status(400).json({ message: "too late" });
 
             let x = await this.createAccount(username,password)
-            return res.send(x)
+            return res.status(201).json({
+                message: "Created user account successfully!"
+            })
         })
     }
 
