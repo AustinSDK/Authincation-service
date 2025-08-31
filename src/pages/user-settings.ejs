@@ -32,16 +32,19 @@
     </script>
 </head>
 <body>
-    <h1>logged in tokens</h1>
-    <% tokens.forEach(token => { %>
-        <p class="token">
-            <% if (token.token === user.token) { %>
-                <span class="info" title="current-device">CD</span>
-            <% } %>
-            <span class="id info" title="id">[<%= token.id %>]</span>
-            <span class="timestamp info" title="time-stamp">[<%= String(token.time_stamp).split(" ")[0] %>]</span>
-            - <a href="#" onclick="logout(<%= token.id %>)">Logout session</a>
-        </p>
-    <% }) %>
+    <%- include('partials/nav', { user: user }) %>
+    <main class="container">
+        <h1>logged in tokens</h1>
+        <% tokens.forEach(token => { %>
+            <p class="token">
+                <% if (token.token === user.token) { %>
+                    <span class="info" title="current-device">CD</span>
+                <% } %>
+                <span class="id info" title="id">[<%= token.id %>]</span>
+                <span class="timestamp info" title="time-stamp">[<%= String(token.time_stamp).split(" ")[0] %>]</span>
+                - <a href="#" onclick="logout(<%= token.id %>)">Logout session</a>
+            </p>
+        <% }) %>
+    </main>
 </body>
 </html>
