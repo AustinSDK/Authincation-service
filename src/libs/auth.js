@@ -362,6 +362,41 @@ class mhm{
         users[String(x.id)] = x;
         return x;
     }
+
+    /**
+     * User Permissions Management Methods
+     */
+    
+    // Update a user's permissions
+    updateUserPermissions(userId, permissions) {
+        if (!Array.isArray(permissions)) {
+            throw new Error("Permissions must be an array");
+        }
+        
+        try {
+            // Convert permissions array to JSON string
+            const permissionsJson = JSON.stringify(permissions);
+            
+            // Update user permissions in database
+            const result = this.db.prepare("UPDATE users SET permissions = ? WHERE id = ?").run(permissionsJson, userId);
+            
+            // Clear user cache to force reload of permissions
+            if (users[String(userId)]) {
+                delete users[String(userId)];
+            }
+            
+            return { success: true, count: permissions.length, result };
+            
+        } catch (error) {
+            console.error('Error updating user permissions:', error);
+            throw new Error("Failed to update user permissions");
+        }
+    }
+
+    // Get a specific user's permissions by ID
+    getUserPermissionsById(userId) {
+        return this.getUserPermissions(userId);
+    }
 }
 
 module.exports = (express,db)=>{

@@ -153,7 +153,7 @@ app.get("/user/:id/settings", async (req,res,next)=>{
     if (!user || (user.id !== id && (!user.admin))){
         return res.redirect("/login")
     }
-    res.render("user-settings",{tokens:auth.getUserTokens(id),user:req.user})
+    res.render("user-settings",{tokens:auth.getUserTokens(id),user:req.user, query:req.query})
 })
 
 // project settings
@@ -259,6 +259,44 @@ app.post("/projects/delete",(req,res)=>{
         res.status(500).json({ message: "Error deleting project" });
     }
 })
+
+// User permissions management endpoints
+app.get("/user/permissions",(req,res)=>{
+    let user = req.user
+    if (!user){
+        return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    try {
+        const permissions = auth.getUserPermissionsById(user.id);
+        res.json({ permissions });
+    } catch (error) {
+        res.status(500).json({ message: "Error retrieving user permissions" });
+    }
+});
+
+app.post("/user/permissions",(req,res)=>{
+    let user = req.user
+    if (!user){
+        return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    try {
+        const { permissions } = req.body;
+        
+        if (!Array.isArray(permissions)) {
+            return res.status(400).json({ message: "Permissions must be an array" });
+        }
+        
+        const result = auth.updateUserPermissions(user.id, permissions);
+        res.json({ 
+            message: `Successfully updated user permissions (${result.count} permissions)`,
+            result 
+        });
+    } catch (error) {
+        res.status(400).json({ message: error.message });
+    }
+});
 
 const port = process.env.PORT
 app.listen(port,e=>{
