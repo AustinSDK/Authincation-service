@@ -45,6 +45,9 @@
                 - <a href="#" onclick="logout(<%= token.id %>)">Logout session</a>
             </p>
         <% }) %>
+        <% if (user.admin && "admin" in query) { %>
+            <%- include('partials/admin', { user: user }) %>
+        <% } %>
         <% if (user.admin) { %>
             <% if ("admin" in query) { %>
                 <a href="?">Regular view</a>
