@@ -1,6 +1,15 @@
 const jwt = require("jsonwebtoken");
 const argon2 = require("argon2");
 const Joi = require("joi");
+const rateLimit = require("express-rate-limit").rateLimit;
+
+const limiter = rateLimit({
+    windowMs: 3 * 60 * 1000,
+    limit:10,
+    standardHeaders:"draft-8",
+    legacyHeaders:false,
+    ipv6Subnet:56
+})
 
 // Define validation schema
 const userSchema = Joi.object({
@@ -28,12 +37,12 @@ async function compare(hash,p){
     }
 }
 
-let users = []
+let users = {};
 class mhm{
     constructor(express,db){
         this.db = db;
         this.router = express.Router();
-        this.router.post("/login",async (req,res)=>{
+        this.router.post("/login", limiter, async (req,res)=>{
 
             const {username,password} = req.body;
             const user = this.db.prepare("SELECT * FROM users WHERE username LIKE ?").get(username);
@@ -42,10 +51,13 @@ class mhm{
             const validify = await compare(user.password,password);
             if (!validify) return res.status(400).json({ message: "Invalid credentials" });
 
+            users[String(user.id)]=user;
+
             const token = jwt.sign(
                 {userId:user.id},
                 process.env.JWT_SECRET || "qsd90!h3l2$!@asdn1p9dfn12h*#asdnj2"
             )
+            this.db.prepare("INSERT INTO tokens (uuid,token) VALUES (?,?)").run(user.id,token)
 
             res.cookie("token", token, {
                 httpOnly: true,
@@ -56,7 +68,7 @@ class mhm{
             });
             res.json({ message: "Login successful" });
         })
-        this.router.post("/register",async (req,res)=>{
+        this.router.post("/register", limiter, async (req,res)=>{
             try {
                 const { username, password } = req.body;
                 
