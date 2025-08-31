@@ -1,3 +1,5 @@
+// > TODO: Cache tokens!
+
 const jwt = require("jsonwebtoken");
 const argon2 = require("argon2");
 const Joi = require("joi");
