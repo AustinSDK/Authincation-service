@@ -117,6 +117,7 @@ app.get("/",(req,res)=>{
         return res.redirect("/login")
     }
     let projects = auth.getProjects(user.permissions)
+    console.log(projects)
     res.render("index.ejs",{user:user,projects:projects});
 });
 app.get("/projects",(req,res)=>{

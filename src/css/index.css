@@ -1,0 +1,6 @@
+.gold.project-card{
+    background-color: var(--gold);
+}
+.gold.project-card > .title::after{
+    content: "👑";
+}
