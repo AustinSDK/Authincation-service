@@ -397,6 +397,92 @@ class mhm{
     getUserPermissionsById(userId) {
         return this.getUserPermissions(userId);
     }
+
+    // Reset user password (admin only)
+    async resetUserPassword(userId, newPassword, adminUserId) {
+        try {
+            // Verify admin permissions
+            const adminPermissions = this.getUserPermissions(adminUserId);
+            if (!adminPermissions.includes('admin')) {
+                throw new Error('Unauthorized: Admin permissions required');
+            }
+
+            // Validate the new password
+            const { error } = userSchema.validate({
+                username: "dummy", // We only care about password validation
+                password: newPassword
+            });
+            
+            if (error) {
+                throw new Error(error.details[0].message);
+            }
+
+            // Check if user exists
+            const user = this.db.prepare("SELECT * FROM users WHERE id = ?").get(userId);
+            if (!user) {
+                throw new Error('User not found');
+            }
+
+            // Hash the new password
+            const hashedPassword = await hash(newPassword);
+
+            // Update the password
+            const result = this.db.prepare("UPDATE users SET password = ? WHERE id = ?").run(hashedPassword, userId);
+            
+            // Clear user cache
+            if (users[String(userId)]) {
+                delete users[String(userId)];
+            }
+
+            // Log out all tokens for this user for security
+            this.db.prepare("DELETE FROM tokens WHERE uuid = ?").run(userId);
+
+            return { success: true, result };
+            
+        } catch (error) {
+            console.error('Error resetting user password:', error);
+            throw error;
+        }
+    }
+
+    // Delete user account (admin only)
+    deleteUserAccount(userId, adminUserId) {
+        try {
+            // Verify admin permissions
+            const adminPermissions = this.getUserPermissions(adminUserId);
+            if (!adminPermissions.includes('admin')) {
+                throw new Error('Unauthorized: Admin permissions required');
+            }
+
+            // Check if user exists
+            const user = this.db.prepare("SELECT * FROM users WHERE id = ?").get(userId);
+            if (!user) {
+                throw new Error('User not found');
+            }
+
+            // Don't allow deleting yourself
+            if (userId === adminUserId) {
+                throw new Error('Cannot delete your own account');
+            }
+
+            // Delete all user tokens first
+            this.db.prepare("DELETE FROM tokens WHERE uuid = ?").run(userId);
+
+            // Delete the user account
+            const result = this.db.prepare("DELETE FROM users WHERE id = ?").run(userId);
+            
+            // Clear user cache
+            if (users[String(userId)]) {
+                delete users[String(userId)];
+            }
+
+            return { success: true, result };
+            
+        } catch (error) {
+            console.error('Error deleting user account:', error);
+            throw error;
+        }
+    }
 }
 
 module.exports = (express,db)=>{

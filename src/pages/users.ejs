@@ -16,10 +16,18 @@
             <ul class="list" style="margin-top:1rem;">
                 <% users.forEach(_user => { %>
                     <li class="card">
-                        <span class="username" style="font-size: 35px;">
-                            <a href="/user/<%= _user.id %>/settings"><%= _user.username %></a>
-                            <span class="user-id" style="font-size: 18px; color: var(--accent-transparency);">(ID: 3)</span>
-                        </span>
+                        <% if (user.id !== _user.id) { %>
+                            <span class="username" style="font-size: 35px;">
+                                <a href="/user/<%= _user.id %>/settings"><%= _user.username %></a><br>
+                                <span class="user-id" style="font-size: 18px; color: var(--accent-transparency);">(ID: <%= _user.id %>)</span>
+                            </span>
+                        <% } else { %>
+                            <span class="username" style="font-size: 35px;">
+                                <a href="/user/<%= _user.id %>/settings" style="color: var(--accent-hover)"><%= _user.username %></a>
+                                <br>
+                                <span class="user-id" style="font-size: 18px; color: var(--accent-transparency);">(ID: <%= _user.id %>)</span>
+                            </span>
+                        <% } %>
                         <br>
                         <span class="admin-link">
                             <a href="/user/<%= _user.id %>/settings?admin" style="color: rgb(150, 56, 33);">Admin view</a>
