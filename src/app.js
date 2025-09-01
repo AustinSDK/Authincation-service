@@ -117,6 +117,7 @@ app.get("/",(req,res)=>{
         return res.redirect("/login")
     }
     let projects = auth.getProjects(user.permissions)
+    console.log(projects)
     res.render("index.ejs",{user:user,projects:projects});
 });
 app.get("/projects",(req,res)=>{
@@ -351,6 +352,11 @@ app.post("/deleteAccount", (req, res) => {
         res.status(400).json({ message: error.message });
     }
 });
+
+// 404
+app.use((req,res,next)=>{
+    res.render("404", {user:req.user})
+})
 
 const port = process.env.PORT
 app.listen(port,e=>{

@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Home</title>
     <link rel="stylesheet" href="/css/main.css">
+    <link rel="stylesheet" href="/css/index.css">
 </head>
 <body>
     <%- include('partials/nav', { user: user }) %>
@@ -17,7 +18,7 @@
             <h2>Tools</h2>
             <ul class="list" style="margin-top:1rem;">
             <% projects.forEach(element => { %>
-                <li class="project-card">
+                <li class="project-card <% if (element.permissions.length === 1 && element.permissions[0] === 'admin') { %>gold<% } %>">
                     <a class="title" href="<%= element.link %>"><%= element.name %></a>
                     <div class="muted"><%= element.description %></div>
                 </li>
