@@ -225,7 +225,7 @@
                     const result = await response.json();
                     
                     if (response.ok) {
-                        toToast(`Successfully saved ${permissions.length} user permissions. Please refresh the page to see changes.`);
+                        window.location.reload();
                     } else {
                         toToast('Error: ' + result.message);
                     }
