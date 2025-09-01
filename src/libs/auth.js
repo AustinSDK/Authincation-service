@@ -393,6 +393,15 @@ class mhm{
         }
     }
 
+    // Get user by id
+    getUserById(userId){
+        if (users[String(userId)]){
+            return users[String(userId)]
+        }
+        users[String(userId)] = this.db.prepare("SELECT * FROM  users WHERE id = ?").get(userId)
+        return users[String(userId)]
+    }
+
     // Get a specific user's permissions by ID
     getUserPermissionsById(userId) {
         return this.getUserPermissions(userId);

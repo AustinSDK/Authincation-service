@@ -150,7 +150,9 @@ app.get("/user/:id/settings", async (req,res,next)=>{
     if (!user || (user.id !== id && (!user.admin))){
         return res.redirect("/login")
     }
-    res.render("user-settings",{tokens:auth.getUserTokens(id),user:req.user, query:req.query, id:id})
+    let _user = auth.getUserById(id)
+    if (!_user) return next()
+    res.render("user-settings",{tokens:auth.getUserTokens(id),user:req.user, query:req.query, id:id, _user:_user})
 })
 
 // All users

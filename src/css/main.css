@@ -78,6 +78,27 @@ P { max-width: 70ch; }
 .project-card a.title { font-weight: 600; display: inline-block; }
 .muted { color: var(--text-dim); font-size: .825rem; }
 .actions { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: .35rem; }
+.card-overlay {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+  display: block;
+  position: relative;
+  z-index: 1;
+  transition: .1s all;
+}
+.card-overlay:hover {
+  overflow: visible;
+  text-overflow: clip;
+  min-width: 100%;
+  max-width: none;
+  background: var(--bg-alt); 
+  width: max-content;
+  z-index: 20;
+  scale: 1.05;
+  transition: .1s all;
+}
 
 /* buttons */
 .btn { --bg-btn: var(--bg-alt2); --bdr: #242424; display: inline-flex; align-items: center; gap: .45ch; padding: .55rem .95rem; border-radius: var(--radius-sm); font-size: .85rem; font-weight: 600; letter-spacing: .5px; border: 1px solid var(--bdr); background: var(--bg-btn); color: var(--text); cursor: pointer; text-decoration: none; position: relative; }
