@@ -15,7 +15,7 @@
         </header>
         <section>
             <h2>Tools</h2>
-            <ul class="project-list" style="margin-top:1rem;">
+            <ul class="list" style="margin-top:1rem;">
             <% projects.forEach(element => { %>
                 <li class="project-card">
                     <a class="title" href="<%= element.link %>"><%= element.name %></a>
@@ -23,6 +23,15 @@
                 </li>
             <% }) %>
             </ul>
+            <% if (user.admin) { %>
+            <h2>Auth Service Tools</h2>
+            <ul class="list">
+                <li class="card">
+                    <a href="/users" class="title">Users</a>
+                    <div class="muted">Users management</div>
+                </li>
+            </ul>
+            <% } %>
         </section>
     </main>
     

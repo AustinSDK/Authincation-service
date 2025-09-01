@@ -72,8 +72,8 @@ h2 { margin-top: 2.25rem; font-size: 1.25rem; text-transform: uppercase; letter-
 P { max-width: 70ch; }
 
 /* list and cards  */
-.project-list, .user-list { list-style: none; padding: 0; margin: 1.25rem 0 0; display: grid; gap: 1rem; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); }
-.project-card, .user-card { background: var(--bg-alt); border: 1px solid #1c1c1c; padding: .9rem .95rem 1rem; border-radius: var(--radius); display: flex; flex-direction: column; gap: .35rem; position: relative; box-shadow: var(--shadow); }
+.list { list-style: none; padding: 0; margin: 1.25rem 0 0; display: grid; gap: 1rem; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); }
+.project-card, .card { background: var(--bg-alt); border: 1px solid #1c1c1c; padding: .9rem .95rem 1rem; border-radius: var(--radius); display: flex; flex-direction: column; gap: .35rem; position: relative; box-shadow: var(--shadow); }
 .project-card:hover { border-color: #2a2a2a; }
 .project-card a.title { font-weight: 600; display: inline-block; }
 .muted { color: var(--text-dim); font-size: .825rem; }
