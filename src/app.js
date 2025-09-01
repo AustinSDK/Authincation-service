@@ -352,6 +352,11 @@ app.post("/deleteAccount", (req, res) => {
     }
 });
 
+// 404
+app.use((req,res,next)=>{
+    res.render("404", {user:req.user})
+})
+
 const port = process.env.PORT
 app.listen(port,e=>{
     if (e){
