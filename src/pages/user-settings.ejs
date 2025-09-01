@@ -135,29 +135,10 @@
 
         // Initialize with current user permissions
         function initializeUserPermissions() {
-            // Load existing permissions from server
-            fetch('/user/permissions')
-                .then(response => response.json())
-                .then(data => {
-                    if (data.permissions && Array.isArray(data.permissions)) {
-                        // Clear existing chips first
-                        userPermChips.innerHTML = '';
-                        // Add each permission as a chip
-                        data.permissions.forEach(perm => addUserPerm(perm));
-                    } else {
-                        // Load current user permissions from the template data
-                        const currentUserPermissions = <%- JSON.stringify(user.permissions || []) %>;
-                        userPermChips.innerHTML = '';
-                        currentUserPermissions.forEach(perm => addUserPerm(perm));
-                    }
-                })
-                .catch(error => {
-                    console.error('Error loading permissions:', error);
-                    // Fallback to current user permissions from template
-                    const currentUserPermissions = <%- JSON.stringify(user.permissions || []) %>;
-                    userPermChips.innerHTML = '';
-                    currentUserPermissions.forEach(perm => addUserPerm(perm));
-                });
+            // Load current user permissions from the template data
+            const currentUserPermissions = <%- JSON.stringify(user.permissions || []) %>;
+            userPermChips.innerHTML = '';
+            currentUserPermissions.forEach(perm => addUserPerm(perm));
         }
 
         // Process input for comma-separated permissions
