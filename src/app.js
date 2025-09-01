@@ -153,6 +153,17 @@ app.get("/user/:id/settings", async (req,res,next)=>{
     res.render("user-settings",{tokens:auth.getUserTokens(id),user:req.user, query:req.query})
 })
 
+// All users
+app.get("/users", async (req,res,next)=>{
+    let user = req.user
+    let id = parseInt(req.params.id, 10)
+    if (!user || (user.id !== id && (!user.admin))){
+        return res.redirect("/login")
+    }
+    let users = auth.db.prepare("SELECT * FROM USERS;").all()
+    res.render('users',{user:req.user,users:users})
+})
+
 // project settings
 app.get("/project/:id", async (req,res,next)=>{
     let user = req.user
