@@ -6,6 +6,8 @@
     <title>User settings</title>
     <link rel="stylesheet" href="/css/main.css">
     <link rel="stylesheet" href="/css/settings.css">
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css" />
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
     <script>
         logout = async (id) => {
             try {
@@ -34,6 +36,16 @@
 <body>
     <%- include('partials/nav', { user: user }) %>
     <main class="container">
+        <% if (user.admin && "admin" in query) { %>
+            <%- include('partials/admin', { user: user }) %>
+        <% } %>
+        <% if (user.admin) { %>
+            <% if ("admin" in query) { %>
+                <a href="?">Regular view</a>
+            <% } else { %>
+                <a href="?admin">Admin view</a>
+            <% } %>
+        <% } %>
         <h1>logged in tokens</h1>
         <% tokens.forEach(token => { %>
             <p class="token">
@@ -46,5 +58,199 @@
             </p>
         <% }) %>
     </main>
+    
+    <% if (user.admin && "admin" in query) { %>
+    <script>
+        /**
+         * User Permissions Management JavaScript
+         * Handles permission management for current user
+         */
+
+        // Toast notification utility function
+        function toToast(msg) {
+            Toastify({ 
+                text: msg, 
+                duration: 3000, 
+                gravity: 'top', 
+                position: 'right', 
+                style: { 
+                    background: 'rgb(212,56,56)', 
+                    color: '#fff' 
+                } 
+            }).showToast();
+        }
+
+        // DOM elements for permissions management
+        const userPermInput = document.getElementById('userPermInput');
+        const userPermChips = document.getElementById('userPermChips');
+        const clearUserPermsBtn = document.getElementById('clearUserPerms');
+        const saveUserPermsBtn = document.getElementById('saveUserPerms');
+        const resetUserPermsBtn = document.getElementById('resetUserPerms');
+
+        /**
+         * Permission Management Functions
+         */
+
+        // Get all current user permissions as an array
+        function getUserPerms() {
+            return Array.from(userPermChips.querySelectorAll('.chip')).map(c => c.dataset.value);
+        }
+
+        // Add a new user permission chip
+        function addUserPerm(raw) {
+            const v = (raw || '').trim().toLowerCase();
+            if (!v) return; 
+            
+            if (getUserPerms().includes(v)) {
+                toToast('Permission already exists');
+                return;
+            }
+            
+            // Create permission chip element
+            const chip = document.createElement('button');
+            chip.type = 'button';
+            chip.className = 'chip';
+            chip.dataset.value = v;
+            chip.innerHTML = `<span>${v}</span><span class="x" aria-label="Remove">×</span>`;
+            
+            // Add click handler to remove chip
+            chip.addEventListener('click', () => {
+                chip.remove();
+                updateUserPermissionsDisplay();
+            });
+            
+            userPermChips.appendChild(chip);
+            updateUserPermissionsDisplay();
+        }
+
+        // Update accessibility attributes for screen readers
+        function updateUserPermissionsDisplay() {
+            const perms = getUserPerms();
+            if (perms.length === 0) {
+                userPermChips.setAttribute('aria-label', 'No user permissions added');
+            } else {
+                userPermChips.setAttribute('aria-label', `${perms.length} user permission${perms.length === 1 ? '' : 's'}: ${perms.join(', ')}`);
+            }
+        }
+
+        // Initialize with current user permissions
+        function initializeUserPermissions() {
+            // Load current user permissions from the template data
+            const currentUserPermissions = <%- JSON.stringify(user.permissions || []) %>;
+            userPermChips.innerHTML = '';
+            currentUserPermissions.forEach(perm => addUserPerm(perm));
+        }
+
+        // Process input for comma-separated permissions
+        function processUserPermissionInput() {
+            const inputValue = userPermInput.value.trim();
+            if (!inputValue) return;
+            
+            // Split by commas and process each permission
+            const permissions = inputValue.split(',').map(p => p.trim()).filter(p => p.length > 0);
+            
+            permissions.forEach(perm => {
+                if (perm) {
+                    addUserPerm(perm);
+                }
+            });
+            
+            userPermInput.value = ''; // Clear the input after processing
+        }
+
+        /**
+         * Event Listeners
+         */
+        if (userPermInput && userPermChips) {
+            // Initialize permissions on page load
+            document.addEventListener('DOMContentLoaded', () => {
+                initializeUserPermissions();
+            });
+
+            // Add permission when Enter key is pressed OR comma is typed
+            userPermInput.addEventListener('keydown', e => { 
+                if (e.key === 'Enter' || e.key === ',') { 
+                    e.preventDefault(); 
+                    processUserPermissionInput();
+                }
+            });
+
+            // Add permission when user clicks away from input
+            userPermInput.addEventListener('blur', () => {
+                if (userPermInput.value.trim()) {
+                    processUserPermissionInput();
+                }
+            });
+
+            // Clear all permissions
+            clearUserPermsBtn.addEventListener('click', () => { 
+                userPermChips.innerHTML = ''; 
+                updateUserPermissionsDisplay();
+            });
+
+            // Save permissions
+            saveUserPermsBtn.addEventListener('click', async () => {
+                const permissions = getUserPerms();
+                
+                // Disable button during save
+                saveUserPermsBtn.disabled = true;
+                saveUserPermsBtn.textContent = 'Saving...';
+                
+                try {
+                    const response = await fetch('/user/permissions', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ permissions })
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (response.ok) {
+                        window.location.reload();
+                    } else {
+                        toToast('Error: ' + result.message);
+                    }
+                } catch (error) {
+                    toToast('Error saving permissions: ' + error.message);
+                } finally {
+                    // Re-enable button
+                    saveUserPermsBtn.disabled = false;
+                    saveUserPermsBtn.textContent = 'Save Permissions';
+                }
+            });
+
+            // Reset permissions
+            resetUserPermsBtn.addEventListener('click', async () => {
+                if (confirm('Are you sure you want to clear all permissions?')) {
+                    userPermChips.innerHTML = '';
+                    updateUserPermissionsDisplay();
+
+                    // Disable button during reset
+                    resetUserPermsBtn.disabled = true;
+                    resetUserPermsBtn.textContent = 'Resetting...';
+
+                    try {
+                        const response = await fetch('/user/permissions', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ permissions: [] })
+                        });
+                        const result = await response.json();
+                        if (response.ok) {
+                            toToast('All user permissions have been cleared and saved.');
+                        } else {
+                            toToast('Error: ' + result.message);
+                        }
+                    } catch (error) {
+                        toToast('Error resetting permissions: ' + error.message);
+                    } finally {
+                        resetUserPermsBtn.disabled = false;
+                        resetUserPermsBtn.textContent = 'Reset Permissions';
+                    }
+                }
+            });
+        }
+    </script>
+    <% } %>
 </body>
 </html>

@@ -1,0 +1,23 @@
+<div id="permissions-tab">
+    <div class="admin-section">
+        <h3>User Permissions Management</h3>
+        <p class="muted">Manage your user permissions. Changes will take effect after saving.</p>
+        
+        <div class="field">
+            <label>Your Current Permissions</label>
+            <div class="permission-editor">
+                <div class="chips" id="userPermChips" aria-live="polite"></div>
+                <div class="perm-add-row">
+                    <input type="text" id="userPermInput" placeholder="Type permissions (comma-separated)" aria-label="Add user permissions" />
+                    <button type="button" id="clearUserPerms" class="btn btn-ghost small" title="Clear all">Clear</button>
+                </div>
+                <p class="muted" style="font-size:.65rem; margin:.4rem 0 0;">Examples: admin, moderator, analytics, viewer, editor (separate with commas)</p>
+            </div>
+        </div>
+        
+        <div class="admin-actions">
+            <button type="button" id="saveUserPerms" class="btn btn-accent">Save Permissions</button>
+            <button type="button" id="resetUserPerms" class="btn btn-ghost">Reset Permissions</button>
+        </div>
+    </div>
+</div>
