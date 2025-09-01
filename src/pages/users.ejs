@@ -11,11 +11,12 @@
     <main class="container">
         <header>
             <h1>Users</h1>
+            <p style="margin-top:.25rem;" class="muted">Access the user database below!</p>
         </header>
         <section>
             <ul class="list" style="margin-top:1rem;">
                 <% users.forEach(_user => { %>
-                    <li class="card">
+                    <li class="card card-overlay">
                         <% if (user.id !== _user.id) { %>
                             <span class="username" style="font-size: 35px;">
                                 <a href="/user/<%= _user.id %>/settings"><%= _user.username %></a><br>
