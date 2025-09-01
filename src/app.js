@@ -160,7 +160,8 @@ app.get("/users", async (req,res,next)=>{
     if (!user || (user.id !== id && (!user.admin))){
         return res.redirect("/login")
     }
-    res.render('users',{user:req.ueser})
+    let users = auth.db.prepare("SELECT * FROM USERS;").all()
+    res.render('users',{user:req.user,users:users})
 })
 
 // project settings
