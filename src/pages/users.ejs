@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home</title>
+    <link rel="stylesheet" href="/css/main.css">
+</head>
+<body>
+    <%- include('partials/nav', { user: user }) %>
+    <main class="container">
+        <header>
+            <h1>Users</h1>
+        </header>
+        <section>
+            <ul class="user-list" style="margin-top:1rem;">
+                <li class="user-card">
+                    <span class="username" style="font-size: 35px;">
+                        <a href="/user/3/settings">austin</a>
+                        <span class="user-id" style="font-size: 18px; color: var(--accent-transparency);">(ID: 3)</span>
+                    </span>
+                    <br>
+                    <span class="admin-link">
+                        <a href="/user/3/settings?admin" style="color: rgb(150, 56, 33);">Admin view</a>
+                    </span>
+                </li>
+            </ul>
+        </section>
+    </main>
+</body>
+</html>
