@@ -152,7 +152,7 @@ app.get("/user/:id/settings", async (req,res,next)=>{
     }
     let _user = auth.getUserById(id)
     if (!_user) return next()
-    res.render("user-settings",{tokens:auth.getUserTokens(id),user:req.user, query:req.query, id:id})
+    res.render("user-settings",{tokens:auth.getUserTokens(id),user:req.user, query:req.query, id:id, _user:_user})
 })
 
 // All users
