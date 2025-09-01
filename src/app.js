@@ -55,10 +55,7 @@ app.use((req,res,next)=>{
                 console.error('Permissions type:', typeof user.permissions);
                 user.permissions = [];
             }
-            user.admin = false
-            if (user.permissions.includes("admin")){
-                user.admin = true
-            }
+            user.admin = user.permissions.includes("admin");
             user.token = req.cookies.token;
             req.user = user;
         } else {
