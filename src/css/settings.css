@@ -1,12 +1,12 @@
-.container {
+/* .container {
     text-align: center;
-}
-.container h1 {
+} */
+/* .container h1 {
     margin: 0 auto;
     padding-block: 10px;
-}
+} */
 .container p.token {
-    margin: 10px auto;
+    /* margin: 10px auto; */
 }
 p.token{
     background-color: rgb(10, 10, 10);
