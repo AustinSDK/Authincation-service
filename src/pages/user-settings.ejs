@@ -62,6 +62,87 @@
     <% if (user.admin && "admin" in query) { %>
     <script>
         /**
+         *  User Actions
+         *  
+         */
+        let _del = false;
+        let _resetpw = false;
+        async function deleteAccount(){
+            if (_del) return;
+            
+            // Confirm deletion
+            if (!confirm("Are you sure you want to delete this account? This action cannot be undone!")) {
+                return;
+            }
+            
+            _del = true;
+            
+            try {
+                let _fetch = await fetch("/deleteAccount", {
+                    method: "POST",
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        userid: <%= id %>
+                    })
+                });
+                
+                let _data = await _fetch.json();
+                
+                if (_fetch.ok) {
+                    alert("Account deleted successfully");
+                    window.location.href = "/users"; // Redirect to users list
+                } else {
+                    alert("Error: " + _data.message);
+                }
+            } catch (error) {
+                console.error('Delete account error:', error);
+                alert("An error occurred while deleting the account");
+            } finally {
+                _del = false;
+            }
+        }
+        
+        async function resetPassword(){
+            if (_resetpw) return;
+            
+            let password = prompt("What's the new password?");
+            if (!password || password.trim() === "") {
+                return;
+            }
+            
+            _resetpw = true;
+            
+            try {
+                let _fetch = await fetch("/resetPassword", {
+                    method: "POST",
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        userid: <%= id %>,
+                        password: password
+                    })
+                });
+                
+                let _data = await _fetch.json();
+                
+                if (_fetch.ok) {
+                    alert("Password reset successfully");
+                } else {
+                    alert("Error: " + _data.message);
+                }
+            } catch (error) {
+                console.error('Reset password error:', error);
+                alert("An error occurred while resetting the password");
+            } finally {
+                _resetpw = false;
+            }
+        }
+
+
+        /**
          * User Permissions Management JavaScript
          * Handles permission management for current user
          */

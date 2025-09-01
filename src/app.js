@@ -150,7 +150,7 @@ app.get("/user/:id/settings", async (req,res,next)=>{
     if (!user || (user.id !== id && (!user.admin))){
         return res.redirect("/login")
     }
-    res.render("user-settings",{tokens:auth.getUserTokens(id),user:req.user, query:req.query})
+    res.render("user-settings",{tokens:auth.getUserTokens(id),user:req.user, query:req.query, id:id})
 })
 
 // All users
@@ -301,6 +301,50 @@ app.post("/user/permissions",(req,res)=>{
             message: `Successfully updated user permissions (${result.count} permissions)`,
             result 
         });
+    } catch (error) {
+        res.status(400).json({ message: error.message });
+    }
+});
+
+// Reset user password (admin only)
+app.post("/resetPassword", async (req, res) => {
+    let user = req.user;
+    if (!user) {
+        return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    try {
+        const { userid, password } = req.body;
+        
+        if (!userid || !password) {
+            return res.status(400).json({ message: "User ID and password are required" });
+        }
+
+        const result = await auth.resetUserPassword(parseInt(userid, 10), password, user.id);
+        res.json({ message: "Password reset successfully" });
+        
+    } catch (error) {
+        res.status(400).json({ message: error.message });
+    }
+});
+
+// Delete user account (admin only)
+app.post("/deleteAccount", (req, res) => {
+    let user = req.user;
+    if (!user) {
+        return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    try {
+        const { userid } = req.body;
+        
+        if (!userid) {
+            return res.status(400).json({ message: "User ID is required" });
+        }
+
+        const result = auth.deleteUserAccount(parseInt(userid, 10), user.id);
+        res.json({ message: "User account deleted successfully" });
+        
     } catch (error) {
         res.status(400).json({ message: error.message });
     }
