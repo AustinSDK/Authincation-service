@@ -220,10 +220,33 @@
             });
 
             // Reset permissions
-            resetUserPermsBtn.addEventListener('click', () => {
+            resetUserPermsBtn.addEventListener('click', async () => {
                 if (confirm('Are you sure you want to clear all permissions?')) {
                     userPermChips.innerHTML = '';
                     updateUserPermissionsDisplay();
+
+                    // Disable button during reset
+                    resetUserPermsBtn.disabled = true;
+                    resetUserPermsBtn.textContent = 'Resetting...';
+
+                    try {
+                        const response = await fetch('/user/permissions', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ permissions: [] })
+                        });
+                        const result = await response.json();
+                        if (response.ok) {
+                            toToast('All user permissions have been cleared and saved.');
+                        } else {
+                            toToast('Error: ' + result.message);
+                        }
+                    } catch (error) {
+                        toToast('Error resetting permissions: ' + error.message);
+                    } finally {
+                        resetUserPermsBtn.disabled = false;
+                        resetUserPermsBtn.textContent = 'Reset Permissions';
+                    }
                 }
             });
         }
