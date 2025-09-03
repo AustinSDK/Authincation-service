@@ -354,12 +354,21 @@ app.post("/deleteAccount", (req, res) => {
 });
 
 // API PAGE
-app.get("/api/v1/get_project",(req,res,next)=>{
-    if (!req.body || !req.body.cookie){
-        req.error = "No cookie or token provided";
-        next()
+app.get("/api/v1/get_projects",(req,res,next)=>{
+    if (!req.body || !req.body.token){
+        check1 = true
+        req.error = "no token provided"
+        return next()
     }
-    res.send(req.body.cookie)
+    user = auth.getUserFromToken(req.body.token)
+    if (!user){
+        req.error = "no user found"
+        return next()
+    }
+    user.permissions = JSON.stringify(user.permissions)
+    let projects = auth.getProjects(user.permissions)
+    console.log(projects)
+    return res.status(200).json(projects)
 })
 
 // 404 page
