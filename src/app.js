@@ -392,7 +392,7 @@ app.get("/api/v1/get_user",(req,res,next)=>{
     return res.status(200).json(user)
 })
 
-// 404 page
+// 404 page 
 app.use((req,res,next)=>{
     if (req.path.startsWith("/api/v1/")) {
         if (!req.error){
