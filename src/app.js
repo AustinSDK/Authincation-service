@@ -353,7 +353,13 @@ app.post("/deleteAccount", (req, res) => {
     }
 });
 
-// API PAGE
+/* 
+ * API requests
+ * Invidual methods for each api
+ */
+/*
+ * API get requests
+ */
 app.get("/api/v1/get_projects",(req,res,next)=>{
     if (!req.body || !req.body.token){
         check1 = true
@@ -369,6 +375,21 @@ app.get("/api/v1/get_projects",(req,res,next)=>{
     let projects = auth.getProjects(user.permissions)
     console.log(projects)
     return res.status(200).json(projects)
+})
+app.get("/api/v1/get_user",(req,res,next)=>{
+    if (!req.body || !req.body.token){
+        check1 = true
+        req.error = "no token provided"
+        return next()
+    }
+    user = auth.getUserFromToken(req.body.token)
+    if (!user){
+        req.error = "no user found"
+        return next()
+    }
+    user.permissions = JSON.stringify(user.permissions)
+    delete user.password
+    return res.status(200).json(user)
 })
 
 // 404 page
