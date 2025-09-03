@@ -355,11 +355,21 @@ app.post("/deleteAccount", (req, res) => {
 
 // API PAGE
 app.get("/api/v1/get_project",(req,res,next)=>{
-    console.log(req.body.cookie)
+    if (!req.body || !req.body.cookie){
+        req.error = "No cookie or token provided";
+        next()
+    }
+    res.send(req.body.cookie)
 })
 
 // 404 page
 app.use((req,res,next)=>{
+    if (req.path.startsWith("/api/v1/")) {
+        if (!req.error){
+            req.error = "No api endpoint found."
+        }
+        return res.status(400).json({status:"error",message:req.error})
+    }
     res.render("404", {user:req.user})
 })
 
