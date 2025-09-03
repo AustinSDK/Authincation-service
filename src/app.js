@@ -353,7 +353,12 @@ app.post("/deleteAccount", (req, res) => {
     }
 });
 
-// 404
+// API PAGE
+app.get("/api/v1/get_project",(req,res,next)=>{
+    console.log(req.body.cookie)
+})
+
+// 404 page
 app.use((req,res,next)=>{
     res.render("404", {user:req.user})
 })
