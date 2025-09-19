@@ -492,6 +492,212 @@ class mhm{
             throw error;
         }
     }
+
+    /**
+     * OAuth Applications Management Methods
+     */
+    
+    // Generate random client ID and secret
+    generateClientCredentials() {
+        const crypto = require('crypto');
+        return {
+            client_id: crypto.randomBytes(16).toString('hex'),
+            client_secret: crypto.randomBytes(32).toString('hex')
+        };
+    }
+
+    // Create OAuth application
+    createOAuthApplication(name, description, redirect_uris, scopes, userId) {
+        try {
+            const { client_id, client_secret } = this.generateClientCredentials();
+            
+            const redirectUrisJson = JSON.stringify(Array.isArray(redirect_uris) ? redirect_uris : [redirect_uris]);
+            const scopesJson = JSON.stringify(Array.isArray(scopes) ? scopes : []);
+            
+            const result = this.db.prepare(
+                "INSERT INTO oauth_applications (name, description, client_id, client_secret, redirect_uris, scopes, user_id) VALUES (?, ?, ?, ?, ?, ?, ?)"
+            ).run(name, description || "", client_id, client_secret, redirectUrisJson, scopesJson, userId);
+            
+            return { 
+                success: true, 
+                application: {
+                    id: result.lastInsertRowid,
+                    name,
+                    description,
+                    client_id,
+                    client_secret,
+                    redirect_uris: JSON.parse(redirectUrisJson),
+                    scopes: JSON.parse(scopesJson)
+                }
+            };
+        } catch (error) {
+            console.error('Error creating OAuth application:', error);
+            throw error;
+        }
+    }
+
+    // Get OAuth applications for user
+    getOAuthApplications(userId = null) {
+        try {
+            let query = "SELECT * FROM oauth_applications";
+            let params = [];
+            
+            if (userId !== null) {
+                query += " WHERE user_id = ?";
+                params.push(userId);
+            }
+            
+            query += " ORDER BY created_at DESC";
+            
+            const applications = this.db.prepare(query).all(...params);
+            
+            return applications.map(app => ({
+                ...app,
+                redirect_uris: JSON.parse(app.redirect_uris || '[]'),
+                scopes: JSON.parse(app.scopes || '[]')
+            }));
+        } catch (error) {
+            console.error('Error getting OAuth applications:', error);
+            return [];
+        }
+    }
+
+    // Get OAuth application by client ID
+    getOAuthApplicationByClientId(clientId) {
+        try {
+            const app = this.db.prepare("SELECT * FROM oauth_applications WHERE client_id = ?").get(clientId);
+            if (app) {
+                app.redirect_uris = JSON.parse(app.redirect_uris || '[]');
+                app.scopes = JSON.parse(app.scopes || '[]');
+            }
+            return app;
+        } catch (error) {
+            console.error('Error getting OAuth application by client ID:', error);
+            return null;
+        }
+    }
+
+    // Update OAuth application
+    updateOAuthApplication(id, name, description, redirect_uris, scopes, userId) {
+        try {
+            const redirectUrisJson = JSON.stringify(Array.isArray(redirect_uris) ? redirect_uris : [redirect_uris]);
+            const scopesJson = JSON.stringify(Array.isArray(scopes) ? scopes : []);
+            
+            const result = this.db.prepare(
+                "UPDATE oauth_applications SET name = ?, description = ?, redirect_uris = ?, scopes = ? WHERE id = ? AND user_id = ?"
+            ).run(name, description || "", redirectUrisJson, scopesJson, id, userId);
+            
+            return { success: result.changes > 0 };
+        } catch (error) {
+            console.error('Error updating OAuth application:', error);
+            throw error;
+        }
+    }
+
+    // Delete OAuth application
+    deleteOAuthApplication(id, userId) {
+        try {
+            const result = this.db.prepare("DELETE FROM oauth_applications WHERE id = ? AND user_id = ?").run(id, userId);
+            return { success: result.changes > 0 };
+        } catch (error) {
+            console.error('Error deleting OAuth application:', error);
+            throw error;
+        }
+    }
+
+    // Generate authorization code
+    generateAuthorizationCode(clientId, userId, redirectUri, scope) {
+        try {
+            const crypto = require('crypto');
+            const code = crypto.randomBytes(32).toString('hex');
+            const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString(); // 10 minutes
+            
+            this.db.prepare(
+                "INSERT INTO oauth_authorization_codes (code, client_id, user_id, redirect_uri, scope, expires_at) VALUES (?, ?, ?, ?, ?, ?)"
+            ).run(code, clientId, userId, redirectUri, scope || "", expiresAt);
+            
+            return code;
+        } catch (error) {
+            console.error('Error generating authorization code:', error);
+            throw error;
+        }
+    }
+
+    // Exchange authorization code for access token
+    exchangeCodeForToken(code, clientId, clientSecret, redirectUri) {
+        try {
+            // Verify authorization code
+            const authCode = this.db.prepare(
+                "SELECT * FROM oauth_authorization_codes WHERE code = ? AND client_id = ? AND redirect_uri = ?"
+            ).get(code, clientId, redirectUri);
+            
+            if (!authCode) {
+                return { success: false, error: "Invalid authorization code" };
+            }
+            
+            // Check if code is expired
+            if (new Date() > new Date(authCode.expires_at)) {
+                this.db.prepare("DELETE FROM oauth_authorization_codes WHERE code = ?").run(code);
+                return { success: false, error: "Authorization code expired" };
+            }
+            
+            // Verify client credentials
+            const app = this.getOAuthApplicationByClientId(clientId);
+            if (!app || app.client_secret !== clientSecret) {
+                return { success: false, error: "Invalid client credentials" };
+            }
+            
+            // Generate access token
+            const crypto = require('crypto');
+            const accessToken = crypto.randomBytes(32).toString('hex');
+            const expiresAt = new Date(Date.now() + 60 * 60 * 1000).toISOString(); // 1 hour
+            
+            // Store access token
+            this.db.prepare(
+                "INSERT INTO oauth_access_tokens (access_token, client_id, user_id, scope, expires_at) VALUES (?, ?, ?, ?, ?)"
+            ).run(accessToken, clientId, authCode.user_id, authCode.scope, expiresAt);
+            
+            // Delete used authorization code
+            this.db.prepare("DELETE FROM oauth_authorization_codes WHERE code = ?").run(code);
+            
+            return {
+                success: true,
+                access_token: accessToken,
+                token_type: "Bearer",
+                expires_in: 3600,
+                scope: authCode.scope
+            };
+        } catch (error) {
+            console.error('Error exchanging code for token:', error);
+            return { success: false, error: "Internal server error" };
+        }
+    }
+
+    // Validate access token
+    validateAccessToken(accessToken) {
+        try {
+            const token = this.db.prepare(
+                "SELECT * FROM oauth_access_tokens WHERE access_token = ?"
+            ).get(accessToken);
+            
+            if (!token) {
+                return { valid: false, error: "Invalid access token" };
+            }
+            
+            if (new Date() > new Date(token.expires_at)) {
+                this.db.prepare("DELETE FROM oauth_access_tokens WHERE access_token = ?").run(accessToken);
+                return { valid: false, error: "Access token expired" };
+            }
+            
+            return {
+                valid: true,
+                token: token
+            };
+        } catch (error) {
+            console.error('Error validating access token:', error);
+            return { valid: false, error: "Internal server error" };
+        }
+    }
 }
 
 module.exports = (express,db)=>{

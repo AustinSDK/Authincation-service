@@ -353,6 +353,234 @@ app.post("/deleteAccount", (req, res) => {
     }
 });
 
+// OAuth Applications Management Routes
+app.get("/oauth",(req,res)=>{
+    let user = req.user
+    if (!user){
+        return res.redirect("/login")
+    }
+    let applications = auth.getOAuthApplications(user.id)
+    res.render("oauth.ejs",{user:user,applications:applications});
+});
+
+app.get("/oauth/create",(req,res)=>{
+    let user = req.user
+    if (!user){
+        return res.redirect("/login")
+    }
+    res.render("create-oauth.ejs",{user:user});
+});
+
+app.get("/oauth/:id", async (req,res,next)=>{
+    let user = req.user
+    let id = parseInt(req.params.id, 10)
+    if (!user){
+        return res.redirect("/login")
+    }
+    let applications = auth.getOAuthApplications(user.id)
+    let application = applications.find(app => app.id === id)
+    if (!application){
+        return res.redirect("/oauth")
+    }
+    res.render("modify-oauth.ejs",{user:req.user,application:application})
+})
+
+app.post("/oauth/create",(req,res)=>{
+    let user = req.user
+    if (!user){
+        return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    try {
+        const { name, description, redirect_uris, scopes } = req.body;
+        
+        if (!name || !name.trim()) {
+            return res.status(400).json({ message: "Application name is required" });
+        }
+        
+        let redirectUrisArray = [];
+        if (typeof redirect_uris === 'string') {
+            redirectUrisArray = redirect_uris.split('\n').filter(uri => uri.trim());
+        } else if (Array.isArray(redirect_uris)) {
+            redirectUrisArray = redirect_uris;
+        }
+        
+        let scopesArray = [];
+        if (typeof scopes === 'string') {
+            scopesArray = scopes.split(' ').filter(scope => scope.trim());
+        } else if (Array.isArray(scopes)) {
+            scopesArray = scopes;
+        }
+        
+        const result = auth.createOAuthApplication(name.trim(), description || "", redirectUrisArray, scopesArray, user.id);
+        res.json({ 
+            message: "OAuth application created successfully",
+            application: result.application
+        });
+    } catch (error) {
+        return res.status(400).json({ message: error.message });
+    }
+});
+
+app.post("/oauth/update",(req,res)=>{
+    let user = req.user
+    if (!user){
+        return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    try {
+        const { id, name, description, redirect_uris, scopes } = req.body;
+        
+        if (!id || !name || !name.trim()) {
+            return res.status(400).json({ message: "Application ID and name are required" });
+        }
+        
+        let redirectUrisArray = [];
+        if (typeof redirect_uris === 'string') {
+            redirectUrisArray = redirect_uris.split('\n').filter(uri => uri.trim());
+        } else if (Array.isArray(redirect_uris)) {
+            redirectUrisArray = redirect_uris;
+        }
+        
+        let scopesArray = [];
+        if (typeof scopes === 'string') {
+            scopesArray = scopes.split(' ').filter(scope => scope.trim());
+        } else if (Array.isArray(scopes)) {
+            scopesArray = scopes;
+        }
+        
+        const result = auth.updateOAuthApplication(parseInt(id), name.trim(), description || "", redirectUrisArray, scopesArray, user.id);
+        
+        if (result.success) {
+            res.json({ message: "OAuth application updated successfully" });
+        } else {
+            res.status(404).json({ message: "OAuth application not found or unauthorized" });
+        }
+    } catch (error) {
+        return res.status(400).json({ message: error.message });
+    }
+});
+
+app.post("/oauth/delete",(req,res)=>{
+    let user = req.user
+    if (!user){
+        return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    try {
+        const { id } = req.body;
+        
+        if (!id) {
+            return res.status(400).json({ message: "Application ID is required" });
+        }
+        
+        const result = auth.deleteOAuthApplication(parseInt(id), user.id);
+        
+        if (result.success) {
+            res.json({ message: "OAuth application deleted successfully" });
+        } else {
+            res.status(404).json({ message: "OAuth application not found or unauthorized" });
+        }
+    } catch (error) {
+        return res.status(400).json({ message: error.message });
+    }
+});
+
+// OAuth Authorization and Token Endpoints
+app.get("/oauth/authorize",(req,res)=>{
+    const { client_id, redirect_uri, response_type, scope, state } = req.query;
+    
+    if (!client_id || !redirect_uri || response_type !== 'code') {
+        return res.status(400).json({ 
+            error: "invalid_request",
+            error_description: "Missing or invalid parameters"
+        });
+    }
+    
+    // Verify client
+    const application = auth.getOAuthApplicationByClientId(client_id);
+    if (!application) {
+        return res.status(400).json({
+            error: "invalid_client",
+            error_description: "Invalid client_id"
+        });
+    }
+    
+    // Verify redirect URI
+    if (!application.redirect_uris.includes(redirect_uri)) {
+        return res.status(400).json({
+            error: "invalid_request",
+            error_description: "Invalid redirect_uri"
+        });
+    }
+    
+    // Check if user is authenticated
+    if (!req.user) {
+        // Store authorization request in session and redirect to login
+        return res.redirect(`/login?redirect=${encodeURIComponent(req.originalUrl)}`);
+    }
+    
+    // Generate authorization code
+    try {
+        const code = auth.generateAuthorizationCode(client_id, req.user.id, redirect_uri, scope || "");
+        
+        // Redirect back to client with authorization code
+        const redirectUrl = new URL(redirect_uri);
+        redirectUrl.searchParams.append('code', code);
+        if (state) {
+            redirectUrl.searchParams.append('state', state);
+        }
+        
+        return res.redirect(redirectUrl.toString());
+    } catch (error) {
+        return res.status(500).json({
+            error: "server_error",
+            error_description: "Failed to generate authorization code"
+        });
+    }
+});
+
+app.post("/oauth/token",(req,res)=>{
+    const { grant_type, code, redirect_uri, client_id, client_secret } = req.body;
+    
+    if (grant_type !== 'authorization_code') {
+        return res.status(400).json({
+            error: "unsupported_grant_type",
+            error_description: "Only authorization_code grant type is supported"
+        });
+    }
+    
+    if (!code || !redirect_uri || !client_id || !client_secret) {
+        return res.status(400).json({
+            error: "invalid_request",
+            error_description: "Missing required parameters"
+        });
+    }
+    
+    try {
+        const result = auth.exchangeCodeForToken(code, client_id, client_secret, redirect_uri);
+        
+        if (result.success) {
+            res.json({
+                access_token: result.access_token,
+                token_type: result.token_type,
+                expires_in: result.expires_in,
+                scope: result.scope
+            });
+        } else {
+            res.status(400).json({
+                error: "invalid_grant",
+                error_description: result.error
+            });
+        }
+    } catch (error) {
+        res.status(500).json({
+            error: "server_error",
+            error_description: "Failed to exchange authorization code"
+        });
+    }
+});
+
 /* 
  * API requests
  * Invidual methods for each api

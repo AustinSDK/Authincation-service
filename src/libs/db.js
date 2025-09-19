@@ -42,6 +42,44 @@ CREATE TABLE IF NOT EXISTS projects (
     link TEXT DEFAULT "/" NOT NULL,
     time_stamp DATETIME DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE TABLE IF NOT EXISTS oauth_applications (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    description TEXT DEFAULT "",
+    client_id TEXT UNIQUE NOT NULL,
+    client_secret TEXT NOT NULL,
+    redirect_uris TEXT DEFAULT '[]' NOT NULL,
+    scopes TEXT DEFAULT '[]' NOT NULL,
+    user_id INTEGER NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users (id)
+);
+
+CREATE TABLE IF NOT EXISTS oauth_authorization_codes (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    code TEXT UNIQUE NOT NULL,
+    client_id TEXT NOT NULL,
+    user_id INTEGER NOT NULL,
+    redirect_uri TEXT NOT NULL,
+    scope TEXT DEFAULT "",
+    expires_at DATETIME NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (client_id) REFERENCES oauth_applications (client_id),
+    FOREIGN KEY (user_id) REFERENCES users (id)
+);
+
+CREATE TABLE IF NOT EXISTS oauth_access_tokens (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    access_token TEXT UNIQUE NOT NULL,
+    client_id TEXT NOT NULL,
+    user_id INTEGER NOT NULL,
+    scope TEXT DEFAULT "",
+    expires_at DATETIME NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (client_id) REFERENCES oauth_applications (client_id),
+    FOREIGN KEY (user_id) REFERENCES users (id)
+);
     `);
 
     

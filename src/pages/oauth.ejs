@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OAuth Applications</title>
+    <link rel="stylesheet" href="/css/main.css">
+    <script src="/js/oauth.js"></script>
+</head>
+<body>
+    <%- include('partials/nav', { user: user }) %>
+    <main class="container"> 
+        <header>
+            <h1>OAuth Applications</h1>
+            <p class="muted" style="margin-top:.5rem;">Manage OAuth applications and client credentials.</p>
+            <div style="margin-top:1rem;">
+                <a href="/oauth/create" class="btn btn-accent">Create Application</a>
+            </div>
+        </header>
+        <section>
+            <h2 style="margin-top:2.25rem;">Application List</h2>
+            <ul class="list">
+                <% applications.forEach(element => { %>
+                    <li class="project-card" data-application-id="<%= element.id %>">
+                        <a class="title" href="/oauth/<%= element.id %>"><%= element.name %></a>
+                        <div class="muted"><%= element.description %></div>
+                        <div class="muted" style="margin-top: 0.5rem;">
+                            <strong>Client ID:</strong> <%= element.client_id %>
+                        </div>
+                        <div class="muted">
+                            <strong>Redirect URIs:</strong> <%= element.redirect_uris.join(', ') %>
+                        </div>
+                        <div class="actions">
+                            <a class="btn btn-ghost small act-delete" href="#" data-action="delete" data-id="<%= element.id %>">Delete</a>
+                            <a class="btn btn-ghost small act-modify" href="#" data-action="modify" data-id="<%= element.id %>">Modify</a>
+                        </div>
+                    </li>
+                <% }) %>
+            </ul>
+        </section>
+    </main>
+</body>
+<script>
+// Delegate actions to avoid inline JS issues
+document.addEventListener('click', function(e){
+    const target = e.target.closest('[data-action]');
+    if(!target) return;
+    e.preventDefault();
+    const id = parseInt(target.getAttribute('data-id'),10);
+    if(target.dataset.action === 'delete' && typeof _delete === 'function') {
+        _delete(id);
+    } else if(target.dataset.action === 'modify' && typeof _modify === 'function') {
+        _modify(id);
+    }
+});
+</script>
+</html>

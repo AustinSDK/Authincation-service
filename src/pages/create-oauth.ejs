@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create OAuth Application</title>
+    <link rel="stylesheet" href="/css/main.css">
+    <script src="/js/create-oauth.js"></script>
+</head>
+<body>
+    <%- include('partials/nav', { user: user }) %>
+    <main class="container">
+        <header>
+            <h1>Create OAuth Application</h1>
+            <p class="muted" style="margin-top:.5rem;">Create a new OAuth application to allow third-party access.</p>
+        </header>
+        <section>
+            <form id="create-oauth-form">
+                <div class="form-group">
+                    <label for="name">Application Name *</label>
+                    <input type="text" id="name" name="name" required>
+                    <small class="muted">A descriptive name for your OAuth application</small>
+                </div>
+                
+                <div class="form-group">
+                    <label for="description">Description</label>
+                    <textarea id="description" name="description" rows="3"></textarea>
+                    <small class="muted">Brief description of your application</small>
+                </div>
+                
+                <div class="form-group">
+                    <label for="redirect_uris">Redirect URIs *</label>
+                    <textarea id="redirect_uris" name="redirect_uris" rows="4" required placeholder="https://example.com/callback&#10;https://example.com/auth/callback"></textarea>
+                    <small class="muted">One redirect URI per line. Users will be redirected here after authorization.</small>
+                </div>
+                
+                <div class="form-group">
+                    <label for="scopes">Scopes</label>
+                    <input type="text" id="scopes" name="scopes" placeholder="read write">
+                    <small class="muted">Space-separated list of OAuth scopes (optional)</small>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-accent">Create Application</button>
+                    <a href="/oauth" class="btn btn-ghost">Cancel</a>
+                </div>
+            </form>
+        </section>
+    </main>
+</body>
+</html>

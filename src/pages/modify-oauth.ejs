@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modify OAuth Application</title>
+    <link rel="stylesheet" href="/css/main.css">
+    <script src="/js/modify-oauth.js"></script>
+</head>
+<body>
+    <%- include('partials/nav', { user: user }) %>
+    <main class="container">
+        <header>
+            <h1>Modify OAuth Application</h1>
+            <p class="muted" style="margin-top:.5rem;">Update OAuth application settings and credentials.</p>
+        </header>
+        <section>
+            <!-- Application Credentials (Read-Only) -->
+            <div style="background: #f8f9fa; padding: 1rem; border-radius: 4px; margin-bottom: 2rem;">
+                <h3>Application Credentials</h3>
+                <div style="margin-top: 1rem;">
+                    <label><strong>Client ID:</strong></label>
+                    <div style="font-family: monospace; background: white; padding: 0.5rem; border-radius: 4px; margin-top: 0.25rem;">
+                        <%= application.client_id %>
+                    </div>
+                </div>
+                <div style="margin-top: 1rem;">
+                    <label><strong>Client Secret:</strong></label>
+                    <div style="font-family: monospace; background: white; padding: 0.5rem; border-radius: 4px; margin-top: 0.25rem;">
+                        <%= application.client_secret %>
+                    </div>
+                </div>
+                <small class="muted">Keep these credentials secure. They cannot be changed after creation.</small>
+            </div>
+            
+            <!-- Editable Form -->
+            <form id="update-oauth-form">
+                <input type="hidden" id="application-id" value="<%= application.id %>">
+                
+                <div class="form-group">
+                    <label for="name">Application Name *</label>
+                    <input type="text" id="name" name="name" value="<%= application.name %>" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="description">Description</label>
+                    <textarea id="description" name="description" rows="3"><%= application.description %></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="redirect_uris">Redirect URIs *</label>
+                    <textarea id="redirect_uris" name="redirect_uris" rows="4" required><%= application.redirect_uris.join('\n') %></textarea>
+                    <small class="muted">One redirect URI per line</small>
+                </div>
+                
+                <div class="form-group">
+                    <label for="scopes">Scopes</label>
+                    <input type="text" id="scopes" name="scopes" value="<%= application.scopes.join(' ') %>">
+                    <small class="muted">Space-separated list of OAuth scopes</small>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-accent">Update Application</button>
+                    <button type="button" id="delete-btn" class="btn btn-danger">Delete Application</button>
+                    <a href="/oauth" class="btn btn-ghost">Back to Applications</a>
+                </div>
+            </form>
+        </section>
+    </main>
+</body>
+</html>
