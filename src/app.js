@@ -581,6 +581,52 @@ app.post("/oauth/token",(req,res)=>{
     }
 });
 
+// OAuth Token Validation API Endpoint
+app.post("/api/v1/oauth/validate_token",(req,res)=>{
+    const { access_token } = req.body;
+    
+    if (!access_token) {
+        return res.status(400).json({
+            error: "invalid_request",
+            error_description: "access_token parameter is required"
+        });
+    }
+    
+    try {
+        const validation = auth.validateAccessToken(access_token);
+        
+        if (validation.valid) {
+            // Get user info for the token
+            const user = auth.getUserById(validation.token.user_id);
+            if (user) {
+                res.json({
+                    valid: true,
+                    user_id: user.id,
+                    username: user.username,
+                    client_id: validation.token.client_id,
+                    scope: validation.token.scope,
+                    expires_at: validation.token.expires_at
+                });
+            } else {
+                res.status(401).json({
+                    error: "invalid_token",
+                    error_description: "Token user not found"
+                });
+            }
+        } else {
+            res.status(401).json({
+                error: "invalid_token",
+                error_description: validation.error
+            });
+        }
+    } catch (error) {
+        res.status(500).json({
+            error: "server_error",
+            error_description: "Failed to validate token"
+        });
+    }
+});
+
 /* 
  * API requests
  * Invidual methods for each api
