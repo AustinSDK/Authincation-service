@@ -371,20 +371,6 @@ app.get("/oauth/create",(req,res)=>{
     res.render("create-oauth.ejs",{user:user});
 });
 
-app.get("/oauth/:id", async (req,res,next)=>{
-    let user = req.user
-    let id = parseInt(req.params.id, 10)
-    if (!user){
-        return res.redirect("/login")
-    }
-    let applications = auth.getOAuthApplications(user.id)
-    let application = applications.find(app => app.id === id)
-    if (!application){
-        return res.redirect("/oauth")
-    }
-    res.render("modify-oauth.ejs",{user:req.user,application:application})
-})
-
 app.post("/oauth/create",(req,res)=>{
     let user = req.user
     if (!user){
@@ -580,6 +566,20 @@ app.post("/oauth/token",(req,res)=>{
         });
     }
 });
+
+app.get("/oauth/:id", async (req,res,next)=>{
+    let user = req.user
+    let id = parseInt(req.params.id, 10)
+    if (!user){
+        return res.redirect("/login")
+    }
+    let applications = auth.getOAuthApplications(user.id)
+    let application = applications.find(app => app.id === id)
+    if (!application){
+        return res.redirect("/oauth")
+    }
+    res.render("modify-oauth.ejs",{user:req.user,application:application})
+})
 
 // OAuth Token Validation API Endpoint
 app.post("/api/v1/oauth/validate_token",(req,res)=>{
