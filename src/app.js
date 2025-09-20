@@ -359,6 +359,10 @@ app.get("/oauth",(req,res)=>{
     if (!user){
         return res.redirect("/login")
     }
+    let _applications
+    if (user.admin){
+        _applications = auth.getOAuthApplications()
+    }
     let applications = auth.getOAuthApplications(user.id)
     let connectedApps = auth.getConnectedApplications(user.id)
     
@@ -367,7 +371,7 @@ app.get("/oauth",(req,res)=>{
     console.log('Applications:', applications.length);
     console.log('Connected Apps:', connectedApps.length);
     
-    res.render("oauth.ejs",{user:user,applications:applications,connectedApps:connectedApps});
+    res.render("oauth.ejs",{user:user,applications:applications,connectedApps:connectedApps,user:req.user,_applications:_applications});
 });
 
 app.get("/oauth/create",(req,res)=>{

@@ -37,6 +37,27 @@
                     </li>
                 <% }) %>
             </ul>
+            <% if (user.admin) { %>
+            <h2 style="margin-top:2.25rem;">All Applications</h2>
+            <ul class="list">
+                <% _applications.forEach(element => { %>
+                    <li class="project-card" data-application-id="<%= element.id %>">
+                        <a class="title" href="/oauth/<%= element.id %>"><%= element.name %></a>
+                        <div class="muted"><%= element.description %></div>
+                        <div class="muted" style="margin-top: 0.5rem;">
+                            <strong>Client ID:</strong> <%= element.client_id %>
+                        </div>
+                        <div class="muted">
+                            <strong>Redirect URIs:</strong> <%= element.redirect_uris.join(', ') %>
+                        </div>
+                        <div class="actions">
+                            <a class="btn btn-ghost small act-delete" href="#" data-action="delete" data-id="<%= element.id %>">Delete</a>
+                            <a class="btn btn-ghost small act-modify" href="#" data-action="modify" data-id="<%= element.id %>">Modify</a>
+                        </div>
+                    </li>
+                <% }) %>
+            </ul>
+            <% } %>
         </section>
         
         <section>
