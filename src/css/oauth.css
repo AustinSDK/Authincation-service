@@ -1,0 +1,6 @@
+#t_redirect_uris{
+    background-color: var(--bg-alt2);
+    border: 1px solid #262626; border-radius: var(--radius-sm); color: var(--text);
+    width: 100%;
+    resize: none;
+}
