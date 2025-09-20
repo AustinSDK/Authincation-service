@@ -18,7 +18,7 @@
             </div>
         </header>
         <section>
-            <h2 style="margin-top:2.25rem;">Application List</h2>
+            <h2 style="margin-top:2.25rem;">Your Applications</h2>
             <ul class="list">
                 <% applications.forEach(element => { %>
                     <li class="project-card" data-application-id="<%= element.id %>">
@@ -38,6 +38,37 @@
                 <% }) %>
             </ul>
         </section>
+        
+        <section>
+            <h2 style="margin-top:2.25rem;">Connected Applications</h2>
+            <p class="muted" style="margin-bottom:1rem;">Applications you've granted access to your account.</p>
+            <% if (connectedApps.length > 0) { %>
+                <ul class="list">
+                    <% connectedApps.forEach(element => { %>
+                        <li class="project-card" data-connected-app="<%= element.client_id %>">
+                            <div class="title"><%= element.name %></div>
+                            <div class="muted"><%= element.description %></div>
+                            <div class="muted" style="margin-top: 0.5rem;">
+                                <strong>Active Tokens:</strong> <%= element.active_tokens %>
+                            </div>
+                            <div class="muted">
+                                <strong>Scopes:</strong> <%= element.scopes.join(', ') || 'None' %>
+                            </div>
+                            <div class="muted">
+                                <strong>Last Activity:</strong> <%= new Date(element.last_expires).toLocaleDateString() %>
+                            </div>
+                            <div class="actions">
+                                <button class="btn btn-ghost small btn-revoke" data-client-id="<%= element.client_id %>">Revoke Access</button>
+                            </div>
+                        </li>
+                    <% }) %>
+                </ul>
+            <% } else { %>
+                <div class="muted" style="padding: 2rem; text-align: center; border: 1px dashed #ccc; border-radius: 4px;">
+                    No connected applications found.
+                </div>
+            <% } %>
+        </section>
     </main>
 </body>
 <script>
@@ -53,5 +84,42 @@ document.addEventListener('click', function(e){
         _modify(id);
     }
 });
+
+// Handle revoke access buttons
+document.addEventListener('click', function(e){
+    if(e.target.classList.contains('btn-revoke')) {
+        e.preventDefault();
+        const clientId = e.target.getAttribute('data-client-id');
+        const appName = e.target.closest('.project-card').querySelector('.title').textContent;
+        
+        if(confirm(`Are you sure you want to revoke access for "${appName}"? This will invalidate all active tokens.`)) {
+            revokeAccess(clientId, e.target.closest('.project-card'));
+        }
+    }
+});
+
+async function revokeAccess(clientId, cardElement) {
+    try {
+        const response = await fetch('/oauth/revoke', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ client_id: clientId })
+        });
+        
+        const result = await response.json();
+        
+        if (response.ok) {
+            // Remove the card from the DOM
+            cardElement.remove();
+            alert(result.message);
+        } else {
+            alert('Error: ' + result.message);
+        }
+    } catch (error) {
+        alert('Error revoking access: ' + error.message);
+    }
+}
 </script>
 </html>

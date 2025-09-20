@@ -360,7 +360,14 @@ app.get("/oauth",(req,res)=>{
         return res.redirect("/login")
     }
     let applications = auth.getOAuthApplications(user.id)
-    res.render("oauth.ejs",{user:user,applications:applications});
+    let connectedApps = auth.getConnectedApplications(user.id)
+    
+    // Debug log to see what's being returned
+    console.log('User ID:', user.id);
+    console.log('Applications:', applications.length);
+    console.log('Connected Apps:', connectedApps.length);
+    
+    res.render("oauth.ejs",{user:user,applications:applications,connectedApps:connectedApps});
 });
 
 app.get("/oauth/create",(req,res)=>{
@@ -466,6 +473,31 @@ app.post("/oauth/delete",(req,res)=>{
             res.json({ message: "OAuth application deleted successfully" });
         } else {
             res.status(404).json({ message: "OAuth application not found or unauthorized" });
+        }
+    } catch (error) {
+        return res.status(400).json({ message: error.message });
+    }
+});
+
+app.post("/oauth/revoke",(req,res)=>{
+    let user = req.user
+    if (!user){
+        return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    try {
+        const { client_id } = req.body;
+        
+        if (!client_id) {
+            return res.status(400).json({ message: "Client ID is required" });
+        }
+        
+        const result = auth.revokeApplicationAccess(user.id, client_id);
+        
+        if (result.success) {
+            res.json({ message: `Successfully revoked access. ${result.deletedTokens} token(s) removed.` });
+        } else {
+            res.status(404).json({ message: "No active tokens found for this application" });
         }
     } catch (error) {
         return res.status(400).json({ message: error.message });
@@ -634,37 +666,151 @@ app.post("/api/v1/oauth/validate_token",(req,res)=>{
 /*
  * API get requests
  */
+app.get("/api/v1/verify",(req,res,next)=>{
+    const token = req.headers.authorization?.replace('Bearer ', '')  || req.query.token;
+    
+    if (!token) {
+        return res.status(200).json({ valid: false, message: "No token provided" });
+    }
+    
+    // Check if it's a regular user token
+    const user = auth.getUserFromToken(token);
+    if (user) {
+        return res.status(200).json({ valid: true, type: "user_token" });
+    }
+    
+    // Check if it's an OAuth access token
+    const oauthValidation = auth.validateAccessToken(token);
+    if (oauthValidation && oauthValidation.valid) {
+        return res.status(200).json({ valid: true, type: "oauth_token" });
+    }
+    
+    return res.status(200).json({ valid: false, message: "Invalid token" });
+});
+
 app.get("/api/v1/get_projects",(req,res,next)=>{
-    if (!req.body || !req.body.token){
-        check1 = true
-        req.error = "no token provided"
-        return next()
+    const token = req.headers.authorization?.replace('Bearer ', '') || req.query.token;
+    
+    if (!token) {
+        req.error = "no token provided";
+        return next();
     }
-    user = auth.getUserFromToken(req.body.token)
-    if (!user){
-        req.error = "no user found"
-        return next()
+    
+    // First try regular user token
+    let user = auth.getUserFromToken(token);
+    
+    // If not found, try OAuth access token
+    if (!user) {
+        const oauthValidation = auth.validateAccessToken(token);
+        if (oauthValidation && oauthValidation.valid && oauthValidation.token) {
+            user = auth.getUserById(oauthValidation.token.user_id);
+        }
     }
-    user.permissions = JSON.stringify(user.permissions)
-    let projects = auth.getProjects(user.permissions)
-    console.log(projects)
-    return res.status(200).json(projects)
-})
+    
+    if (!user) {
+        req.error = "invalid token or user not found";
+        return next();
+    }
+    
+    // Handle user permissions parsing
+    try {
+        if (!user.permissions) {
+            user.permissions = [];
+        } else if (Array.isArray(user.permissions)) {
+            user.permissions = user.permissions;
+        } else if (typeof user.permissions === 'string') {
+            if (user.permissions.trim() === '') {
+                user.permissions = [];
+            } else {
+                user.permissions = JSON.parse(user.permissions);
+            }
+        } else {
+            user.permissions = [];
+        }
+    } catch (error) {
+        console.error('Error parsing user permissions:', error);
+        user.permissions = [];
+    }
+    
+    let projects = auth.getProjects(user.permissions);
+    return res.status(200).json(projects);
+});
 app.get("/api/v1/get_user",(req,res,next)=>{
-    if (!req.body || !req.body.token){
-        check1 = true
-        req.error = "no token provided"
-        return next()
+    const token = req.headers.authorization?.replace('Bearer ', '') || req.query.token;
+    
+    if (!token) {
+        req.error = "no token provided";
+        return next();
     }
-    user = auth.getUserFromToken(req.body.token)
-    if (!user){
-        req.error = "no user found"
-        return next()
+    
+    // First try regular user token
+    let user = auth.getUserFromToken(token);
+    if (user) {
+        // Handle user permissions parsing
+        try {
+            if (!user.permissions) {
+                user.permissions = [];
+            } else if (Array.isArray(user.permissions)) {
+                user.permissions = user.permissions;
+            } else if (typeof user.permissions === 'string') {
+                if (user.permissions.trim() === '') {
+                    user.permissions = [];
+                } else {
+                    user.permissions = JSON.parse(user.permissions);
+                }
+            } else {
+                user.permissions = [];
+            }
+        } catch (error) {
+            console.error('Error parsing user permissions:', error);
+            user.permissions = [];
+        }
+        
+        delete user.password;
+        return res.status(200).json({
+            username: user.username,
+            permissions: user.permissions
+        });
     }
-    user.permissions = JSON.stringify(user.permissions)
-    delete user.password
-    return res.status(200).json(user)
-})
+    
+    // Try OAuth access token
+    const oauthValidation = auth.validateAccessToken(token);
+    if (oauthValidation && oauthValidation.valid) {
+        if (oauthValidation.token && oauthValidation.token.user_id) {
+            const oauthUser = auth.getUserById(oauthValidation.token.user_id);
+            if (oauthUser) {
+            // Handle user permissions parsing
+            try {
+                if (!oauthUser.permissions) {
+                    oauthUser.permissions = [];
+                } else if (Array.isArray(oauthUser.permissions)) {
+                    oauthUser.permissions = oauthUser.permissions;
+                } else if (typeof oauthUser.permissions === 'string') {
+                    if (oauthUser.permissions.trim() === '') {
+                        oauthUser.permissions = [];
+                    } else {
+                        oauthUser.permissions = JSON.parse(oauthUser.permissions);
+                    }
+                } else {
+                    oauthUser.permissions = [];
+                }
+            } catch (error) {
+                console.error('Error parsing user permissions:', error);
+                oauthUser.permissions = [];
+            }
+            
+            delete oauthUser.password;
+            return res.status(200).json({
+                username: oauthUser.username,
+                permissions: oauthUser.permissions
+            });
+        }
+    }
+    }
+    
+    req.error = "invalid token or user not found";
+    return next();
+});
 
 // 404 page 
 app.use((req,res,next)=>{

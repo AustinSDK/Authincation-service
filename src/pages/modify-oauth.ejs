@@ -1,71 +1,80 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Modify OAuth Application</title>
-    <link rel="stylesheet" href="/css/main.css">
-    <script src="/js/modify-oauth.js"></script>
+    <link rel="stylesheet" href="/css/main.css" />
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css" />
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
 </head>
 <body>
     <%- include('partials/nav', { user: user }) %>
     <main class="container">
-        <header>
-            <h1>Modify OAuth Application</h1>
-            <p class="muted" style="margin-top:.5rem;">Update OAuth application settings and credentials.</p>
-        </header>
-        <section>
-            <!-- Application Credentials (Read-Only) -->
-            <div style="background: #f8f9fa; padding: 1rem; border-radius: 4px; margin-bottom: 2rem;">
-                <h3>Application Credentials</h3>
-                <div style="margin-top: 1rem;">
-                    <label><strong>Client ID:</strong></label>
-                    <div style="font-family: monospace; background: white; padding: 0.5rem; border-radius: 4px; margin-top: 0.25rem;">
-                        <%= application.client_id %>
-                    </div>
+        <!-- Application Credentials (Read-Only) -->
+        <div style="background: #f8f9fa; padding: 1.5rem; border-radius: 8px; margin-bottom: 2rem; border: 1px solid #e9ecef;">
+            <h3 style="margin: 0 0 1rem 0; color: #495057;">Application Credentials</h3>
+            <div style="margin-bottom: 1rem;">
+                <label style="display: block; font-weight: bold; margin-bottom: 0.25rem; color: #495057;">Client ID:</label>
+                <div style="font-family: 'Courier New', monospace; background: white; padding: 0.75rem; border-radius: 4px; border: 1px solid #ced4da; font-size: 0.9em; color: #495057;">
+                    <%= application.client_id %>
                 </div>
-                <div style="margin-top: 1rem;">
-                    <label><strong>Client Secret:</strong></label>
-                    <div style="font-family: monospace; background: white; padding: 0.5rem; border-radius: 4px; margin-top: 0.25rem;">
-                        <%= application.client_secret %>
-                    </div>
+            </div>
+            <div style="margin-bottom: 1rem;">
+                <label style="display: block; font-weight: bold; margin-bottom: 0.25rem; color: #495057;">Client Secret:</label>
+                <div style="font-family: 'Courier New', monospace; background: white; padding: 0.75rem; border-radius: 4px; border: 1px solid #ced4da; font-size: 0.9em; color: #495057;">
+                    <%= application.client_secret %>
                 </div>
-                <small class="muted">Keep these credentials secure. They cannot be changed after creation.</small>
+            </div>
+            <small class="muted" style="font-style: italic;">⚠️ Keep these credentials secure. They cannot be changed after creation.</small>
+        </div>
+
+        <form id="modifyOAuthForm" class="auth-form" autocomplete="off">
+            <h1 style="margin-bottom:.25rem;">Modify OAuth Application</h1>
+            <p class="muted center" style="margin-top:0;">Update OAuth application settings and credentials.</p>
+            
+            <input type="hidden" id="application-id" value="<%= application.id %>">
+            
+            <div class="field">
+                <label for="t_name">Application Name</label>
+                <input type="text" id="t_name" maxlength="60" value="<%= application.name %>" required />
             </div>
             
-            <!-- Editable Form -->
-            <form id="update-oauth-form">
-                <input type="hidden" id="application-id" value="<%= application.id %>">
-                
-                <div class="form-group">
-                    <label for="name">Application Name *</label>
-                    <input type="text" id="name" name="name" value="<%= application.name %>" required>
+            <div class="field">
+                <label for="t_description">Description</label>
+                <input type="text" id="t_description" maxlength="140" value="<%= application.description %>" />
+            </div>
+            
+            <div class="field">
+                <label for="t_redirect_uris">Redirect URIs</label>
+                <textarea id="t_redirect_uris" rows="4" required><%= application.redirect_uris.join('\n') %></textarea>
+                <p class="muted" style="font-size:.65rem; margin:.4rem 0 0;">One redirect URI per line. Users will be redirected here after authorization.</p>
+            </div>
+            
+            <div class="field">
+                <label>Scopes</label>
+                <div class="permission-editor">
+                    <div class="chips" id="scopeChips" aria-live="polite"></div>
+                    <div class="perm-add-row">
+                        <input type="text" id="scopeInput" placeholder="Type scopes (comma-separated)" aria-label="Add scopes" />
+                        <button type="button" id="clearScopes" class="btn btn-ghost small" title="Clear all">Clear</button>
+                    </div>
+                    <p class="muted" style="font-size:.65rem; margin:.4rem 0 0;">Examples: read, write, user:profile (separate with commas)</p>
                 </div>
-                
-                <div class="form-group">
-                    <label for="description">Description</label>
-                    <textarea id="description" name="description" rows="3"><%= application.description %></textarea>
-                </div>
-                
-                <div class="form-group">
-                    <label for="redirect_uris">Redirect URIs *</label>
-                    <textarea id="redirect_uris" name="redirect_uris" rows="4" required><%= application.redirect_uris.join('\n') %></textarea>
-                    <small class="muted">One redirect URI per line</small>
-                </div>
-                
-                <div class="form-group">
-                    <label for="scopes">Scopes</label>
-                    <input type="text" id="scopes" name="scopes" value="<%= application.scopes.join(' ') %>">
-                    <small class="muted">Space-separated list of OAuth scopes</small>
-                </div>
-                
-                <div class="form-actions">
-                    <button type="submit" class="btn btn-accent">Update Application</button>
-                    <button type="button" id="delete-btn" class="btn btn-danger">Delete Application</button>
-                    <a href="/oauth" class="btn btn-ghost">Back to Applications</a>
-                </div>
-            </form>
-        </section>
+            </div>
+            
+            <input type="submit" value="Update Application" class="btn btn-accent" disabled />
+            <button type="button" id="delete-btn" class="btn btn-danger">Delete Application</button>
+            <div class="alt-link"><a href="/oauth">Back to OAuth applications</a></div>
+        </form>
     </main>
 </body>
+<script>
+    // Pass application data to JavaScript
+    window.applicationData = {
+        id: <%= application.id %>,
+        scopes: <%- JSON.stringify(application.scopes || []) %>
+    };
+</script>
+<script src="/js/modify-oauth.js"></script>
 </html>

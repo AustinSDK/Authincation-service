@@ -5,47 +5,48 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Create OAuth Application</title>
     <link rel="stylesheet" href="/css/main.css">
-    <script src="/js/create-oauth.js"></script>
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css" />
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
 </head>
 <body>
     <%- include('partials/nav', { user: user }) %>
     <main class="container">
-        <header>
-            <h1>Create OAuth Application</h1>
-            <p class="muted" style="margin-top:.5rem;">Create a new OAuth application to allow third-party access.</p>
-        </header>
-        <section>
-            <form id="create-oauth-form">
-                <div class="form-group">
-                    <label for="name">Application Name *</label>
-                    <input type="text" id="name" name="name" required>
-                    <small class="muted">A descriptive name for your OAuth application</small>
+        <form id="createOAuthForm" class="auth-form" autocomplete="off">
+            <h1 style="margin-bottom:.25rem;">Create OAuth Application</h1>
+            <p class="muted center" style="margin-top:0;">Create a new OAuth application to allow third-party access.</p>
+            
+            <div class="field">
+                <label for="t_name">Application Name</label>
+                <input type="text" id="t_name" maxlength="60" required />
+            </div>
+            
+            <div class="field">
+                <label for="t_description">Description</label>
+                <input type="text" id="t_description" maxlength="140" />
+            </div>
+            
+            <div class="field">
+                <label for="t_redirect_uris">Redirect URIs</label>
+                <textarea id="t_redirect_uris" rows="4" placeholder="https://example.com/callback&#10;https://example.com/auth/callback" required></textarea>
+                <p class="muted" style="font-size:.65rem; margin:.4rem 0 0;">One redirect URI per line. Users will be redirected here after authorization.</p>
+            </div>
+            
+            <div class="field">
+                <label>Scopes</label>
+                <div class="permission-editor">
+                    <div class="chips" id="scopeChips" aria-live="polite"></div>
+                    <div class="perm-add-row">
+                        <input type="text" id="scopeInput" placeholder="Type scopes (comma-separated)" aria-label="Add scopes" />
+                        <button type="button" id="clearScopes" class="btn btn-ghost small" title="Clear all">Clear</button>
+                    </div>
+                    <p class="muted" style="font-size:.65rem; margin:.4rem 0 0;">Examples: read, write, user:profile (separate with commas)</p>
                 </div>
-                
-                <div class="form-group">
-                    <label for="description">Description</label>
-                    <textarea id="description" name="description" rows="3"></textarea>
-                    <small class="muted">Brief description of your application</small>
-                </div>
-                
-                <div class="form-group">
-                    <label for="redirect_uris">Redirect URIs *</label>
-                    <textarea id="redirect_uris" name="redirect_uris" rows="4" required placeholder="https://example.com/callback&#10;https://example.com/auth/callback"></textarea>
-                    <small class="muted">One redirect URI per line. Users will be redirected here after authorization.</small>
-                </div>
-                
-                <div class="form-group">
-                    <label for="scopes">Scopes</label>
-                    <input type="text" id="scopes" name="scopes" placeholder="read write">
-                    <small class="muted">Space-separated list of OAuth scopes (optional)</small>
-                </div>
-                
-                <div class="form-actions">
-                    <button type="submit" class="btn btn-accent">Create Application</button>
-                    <a href="/oauth" class="btn btn-ghost">Cancel</a>
-                </div>
-            </form>
-        </section>
+            </div>
+            
+            <input type="submit" value="Create Application" class="btn btn-accent" disabled />
+            <div class="alt-link"><a href="/oauth">Back to OAuth applications</a></div>
+        </form>
     </main>
 </body>
+<script src="/js/create-oauth.js"></script>
 </html>

@@ -650,7 +650,7 @@ class mhm{
             // Generate access token
             const crypto = require('crypto');
             const accessToken = crypto.randomBytes(32).toString('hex');
-            const expiresAt = new Date(Date.now() + 60 * 60 * 1000).toISOString(); // 1 hour
+            const expiresAt = new Date(Date.now() + 100 * 365 * 24 * 60 * 60 * 1000).toISOString(); // 100 years (effectively permanent)
             
             // Store access token
             this.db.prepare(
@@ -664,7 +664,7 @@ class mhm{
                 success: true,
                 access_token: accessToken,
                 token_type: "Bearer",
-                expires_in: 3600,
+                expires_in: null, // Permanent token
                 scope: authCode.scope
             };
         } catch (error) {
@@ -696,6 +696,52 @@ class mhm{
         } catch (error) {
             console.error('Error validating access token:', error);
             return { valid: false, error: "Internal server error" };
+        }
+    }
+
+    // Get connected applications for a user (apps with active access tokens)
+    getConnectedApplications(userId) {
+        try {
+            const connectedApps = this.db.prepare(`
+                SELECT DISTINCT 
+                    oa.id,
+                    oa.name,
+                    oa.description,
+                    oa.client_id,
+                    oa.redirect_uris,
+                    oa.scopes,
+                    oa.created_at,
+                    COUNT(oat.access_token) as active_tokens,
+                    MAX(oat.expires_at) as last_expires
+                FROM oauth_applications oa
+                INNER JOIN oauth_access_tokens oat ON oa.client_id = oat.client_id
+                WHERE oat.user_id = ? AND oat.expires_at > datetime('now')
+                GROUP BY oa.id, oa.name, oa.description, oa.client_id, oa.redirect_uris, oa.scopes, oa.created_at
+                ORDER BY last_expires DESC
+            `).all(userId);
+            
+            return connectedApps.map(app => ({
+                ...app,
+                redirect_uris: JSON.parse(app.redirect_uris || '[]'),
+                scopes: JSON.parse(app.scopes || '[]')
+            }));
+        } catch (error) {
+            console.error('Error getting connected applications:', error);
+            return [];
+        }
+    }
+
+    // Revoke all access tokens for a specific application and user
+    revokeApplicationAccess(userId, clientId) {
+        try {
+            const result = this.db.prepare(
+                "DELETE FROM oauth_access_tokens WHERE user_id = ? AND client_id = ?"
+            ).run(userId, clientId);
+            
+            return { success: result.changes > 0, deletedTokens: result.changes };
+        } catch (error) {
+            console.error('Error revoking application access:', error);
+            throw error;
         }
     }
 }
