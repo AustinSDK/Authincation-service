@@ -220,6 +220,12 @@ class mhm{
         }
     }
     deleteProject(id){
+        // Check if project exists before deletion
+        const existingProject = this.db.prepare("SELECT * FROM projects WHERE id = ?").get(id);
+        if (!existingProject) {
+            throw new Error("Project not found");
+        }
+        
         let x = this.db.prepare("DELETE FROM projects WHERE id = ?").run(id)
         _projects_chached = false; // Clear cache when project is deleted
         return x
@@ -610,8 +616,36 @@ class mhm{
     // Delete OAuth application
     deleteOAuthApplication(id, userId) {
         try {
-            const result = this.db.prepare("DELETE FROM oauth_applications WHERE id = ? AND user_id = ?").run(id, userId);
-            return { success: result.changes > 0 };
+            // First, check if the application exists and belongs to the user
+            const app = this.db.prepare("SELECT * FROM oauth_applications WHERE id = ? AND user_id = ?").get(id, userId);
+            if (!app) {
+                return { success: false, error: "OAuth application not found or unauthorized" };
+            }
+
+            // Begin transaction for atomic deletion
+            const deleteTransaction = this.db.transaction(() => {
+                // Delete related access tokens first
+                const deleteTokensResult = this.db.prepare("DELETE FROM oauth_access_tokens WHERE client_id = ?").run(app.client_id);
+                
+                // Delete related authorization codes
+                const deleteCodesResult = this.db.prepare("DELETE FROM oauth_authorization_codes WHERE client_id = ?").run(app.client_id);
+                
+                // Finally, delete the OAuth application
+                const deleteAppResult = this.db.prepare("DELETE FROM oauth_applications WHERE id = ? AND user_id = ?").run(id, userId);
+                
+                return {
+                    tokensDeleted: deleteTokensResult.changes,
+                    codesDeleted: deleteCodesResult.changes,
+                    appDeleted: deleteAppResult.changes > 0
+                };
+            });
+
+            const result = deleteTransaction();
+            return { 
+                success: result.appDeleted,
+                tokensDeleted: result.tokensDeleted,
+                codesDeleted: result.codesDeleted
+            };
         } catch (error) {
             console.error('Error deleting OAuth application:', error);
             throw error;

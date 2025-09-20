@@ -267,7 +267,12 @@ app.post("/projects/delete",(req,res)=>{
         const result = auth.deleteProject(parseInt(req.body.id, 10));
         res.json({ message: "Project deleted successfully", result });
     } catch (error) {
-        res.status(500).json({ message: "Error deleting project" });
+        console.error("Error deleting project:", error);
+        if (error.message === "Project not found") {
+            res.status(404).json({ message: error.message });
+        } else {
+            res.status(500).json({ message: "Error deleting project: " + error.message });
+        }
     }
 })
 
@@ -474,12 +479,16 @@ app.post("/oauth/delete",(req,res)=>{
         const result = auth.deleteOAuthApplication(parseInt(id), user.id);
         
         if (result.success) {
-            res.json({ message: "OAuth application deleted successfully" });
+            const message = `OAuth application deleted successfully. ${result.tokensDeleted} access tokens and ${result.codesDeleted} authorization codes were also removed.`;
+            res.json({ message: message });
+        } else if (result.error) {
+            res.status(404).json({ message: result.error });
         } else {
             res.status(404).json({ message: "OAuth application not found or unauthorized" });
         }
     } catch (error) {
-        return res.status(400).json({ message: error.message });
+        console.error("Error deleting OAuth application:", error);
+        return res.status(500).json({ message: "Internal server error while deleting OAuth application" });
     }
 });
 
