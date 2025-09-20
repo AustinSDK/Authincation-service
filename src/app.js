@@ -437,6 +437,15 @@ app.post("/oauth/update",(req,res)=>{
             return res.status(400).json({ message: "Application ID and name are required" });
         }
         
+        // Check if user owns this OAuth application or is admin
+        const appId = parseInt(id);
+        const applications = user.admin ? auth.getOAuthApplications() : auth.getOAuthApplications(user.id);
+        const existingApp = applications.find(app => app.id === appId);
+        
+        if (!existingApp) {
+            return res.status(404).json({ message: "OAuth application not found or unauthorized" });
+        }
+        
         let redirectUrisArray = [];
         if (typeof redirect_uris === 'string') {
             redirectUrisArray = redirect_uris.split('\n').filter(uri => uri.trim());
@@ -451,7 +460,9 @@ app.post("/oauth/update",(req,res)=>{
             scopesArray = scopes;
         }
         
-        const result = auth.updateOAuthApplication(parseInt(id), name.trim(), description || "", redirectUrisArray, scopesArray, user.id);
+        // Use the original owner's user_id for the update, even if admin is making the change
+        const ownerUserId = user.admin ? existingApp.user_id : user.id;
+        const result = auth.updateOAuthApplication(appId, name.trim(), description || "", redirectUrisArray, scopesArray, ownerUserId);
         
         if (result.success) {
             res.json({ message: "OAuth application updated successfully" });
@@ -476,7 +487,18 @@ app.post("/oauth/delete",(req,res)=>{
             return res.status(400).json({ message: "Application ID is required" });
         }
         
-        const result = auth.deleteOAuthApplication(parseInt(id), user.id);
+        // Check if user owns this OAuth application or is admin
+        const appId = parseInt(id);
+        const applications = user.admin ? auth.getOAuthApplications() : auth.getOAuthApplications(user.id);
+        const existingApp = applications.find(app => app.id === appId);
+        
+        if (!existingApp) {
+            return res.status(404).json({ message: "OAuth application not found or unauthorized" });
+        }
+        
+        // Use the original owner's user_id for the delete, even if admin is making the change
+        const ownerUserId = user.admin ? existingApp.user_id : user.id;
+        const result = auth.deleteOAuthApplication(appId, ownerUserId);
         
         if (result.success) {
             const message = `OAuth application deleted successfully. ${result.tokensDeleted} access tokens and ${result.codesDeleted} authorization codes were also removed.`;
@@ -618,7 +640,15 @@ app.get("/oauth/:id", async (req,res,next)=>{
     if (!user){
         return res.redirect("/login")
     }
-    let applications = auth.getOAuthApplications(user.id)
+    
+    // Get all applications if admin, otherwise only user's applications
+    let applications;
+    if (user.admin) {
+        applications = auth.getOAuthApplications(); // Get all applications for admin
+    } else {
+        applications = auth.getOAuthApplications(user.id); // Get only user's applications
+    }
+    
     let application = applications.find(app => app.id === id)
     if (!application){
         return res.redirect("/oauth")
