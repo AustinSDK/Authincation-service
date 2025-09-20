@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Modify OAuth Application</title>
+    <link rel="stylesheet" href="/css/main.css" />
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css" />
+    <link rel="stylesheet" href="/css/oauth.css">
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+</head>
+<body>
+    <%- include('partials/nav', { user: user }) %>
+    <main class="container">
+        <!-- Application Credentials (Read-Only) -->
+        <div class="credentials-section">
+            <h3>Application Credentials</h3>
+            <div class="credential-field">
+                <label>Client ID:</label>
+                <div class="credential-value">
+                    <%= application.client_id %>
+                </div>
+            </div>
+            <div class="credential-field">
+                <label>Client Secret:</label>
+                <div class="credential-value">
+                    <%= application.client_secret %>
+                </div>
+            </div>
+            <small class="muted credentials-warning">Keep these credentials secure. They cannot be changed after creation.</small>
+        </div>
+
+        <form id="modifyOAuthForm" class="auth-form" autocomplete="off">
+            <h1 class="oauth-form-title">Modify OAuth Application</h1>
+            <p class="muted center oauth-form-subtitle">Update OAuth application settings and credentials.</p>
+            
+            <input type="hidden" id="application-id" value="<%= application.id %>">
+            
+            <div class="field">
+                <label for="t_name">Application Name</label>
+                <input type="text" id="t_name" maxlength="60" value="<%= application.name %>" required />
+            </div>
+            
+            <div class="field">
+                <label for="t_description">Description</label>
+                <input type="text" id="t_description" maxlength="140" value="<%= application.description %>" />
+            </div>
+            
+            <div class="field">
+                <label for="t_redirect_uris">Redirect URIs</label>
+                <textarea id="t_redirect_uris" rows="4" required><%= application.redirect_uris.join('\n') %></textarea>
+                <p class="muted redirect-help">One redirect URI per line. Users will be redirected here after authorization.</p>
+            </div>
+            
+            <div class="field">
+                <label>Scopes</label>
+                <div class="permission-editor">
+                    <div class="chips" id="scopeChips" aria-live="polite"></div>
+                    <div class="perm-add-row">
+                        <input type="text" id="scopeInput" placeholder="Type scopes (comma-separated)" aria-label="Add scopes" />
+                        <button type="button" id="clearScopes" class="btn btn-ghost small" title="Clear all">Clear</button>
+                    </div>
+                    <p class="muted scope-help">Examples: read, write, user:profile (separate with commas)</p>
+                </div>
+            </div>
+            
+            <input type="submit" value="Update Application" class="btn btn-accent" disabled />
+            <button type="button" id="delete-btn" class="btn btn-danger">Delete Application</button>
+            <div class="alt-link"><a href="/oauth">Back to OAuth applications</a></div>
+        </form>
+    </main>
+</body>
+<script>
+    // Pass application data to JavaScript
+    window.applicationData = {
+        id: <%= application.id %>,
+        scopes: <%- JSON.stringify(application.scopes || []) %>
+    };
+</script>
+<script src="/js/modify-oauth.js"></script>
+</html>

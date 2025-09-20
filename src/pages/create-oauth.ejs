@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create OAuth Application</title>
+    <link rel="stylesheet" href="/css/main.css">
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css" />
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+</head>
+<body>
+    <%- include('partials/nav', { user: user }) %>
+    <main class="container">
+        <form id="createOAuthForm" class="auth-form" autocomplete="off">
+            <h1 style="margin-bottom:.25rem;">Create OAuth Application</h1>
+            <p class="muted center" style="margin-top:0;">Create a new OAuth application to allow third-party access.</p>
+            
+            <div class="field">
+                <label for="t_name">Application Name</label>
+                <input type="text" id="t_name" maxlength="60" required />
+            </div>
+            
+            <div class="field">
+                <label for="t_description">Description</label>
+                <input type="text" id="t_description" maxlength="140" />
+            </div>
+            
+            <div class="field">
+                <label for="t_redirect_uris">Redirect URIs</label>
+                <textarea id="t_redirect_uris" rows="4" placeholder="https://example.com/callback&#10;https://example.com/auth/callback" required></textarea>
+                <p class="muted" style="font-size:.65rem; margin:.4rem 0 0;">One redirect URI per line. Users will be redirected here after authorization.</p>
+            </div>
+            
+            <div class="field">
+                <label>Scopes</label>
+                <div class="permission-editor">
+                    <div class="chips" id="scopeChips" aria-live="polite"></div>
+                    <div class="perm-add-row">
+                        <input type="text" id="scopeInput" placeholder="Type scopes (comma-separated)" aria-label="Add scopes" />
+                        <button type="button" id="clearScopes" class="btn btn-ghost small" title="Clear all">Clear</button>
+                    </div>
+                    <p class="muted" style="font-size:.65rem; margin:.4rem 0 0;">Examples: read, write, user:profile (separate with commas)</p>
+                </div>
+            </div>
+            
+            <input type="submit" value="Create Application" class="btn btn-accent" disabled />
+            <div class="alt-link"><a href="/oauth">Back to OAuth applications</a></div>
+        </form>
+    </main>
+</body>
+<script src="/js/create-oauth.js"></script>
+</html>
