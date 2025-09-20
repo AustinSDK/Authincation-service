@@ -13,26 +13,26 @@
     <%- include('partials/nav', { user: user }) %>
     <main class="container">
         <!-- Application Credentials (Read-Only) -->
-        <div style="background: var(--bg-alt); padding: 1.5rem; border-radius: 8px; margin-bottom: 2rem; border: 1px solid #1a1a1a;">
-            <h3 style="margin: 0 0 1rem 0; color: #495057;">Application Credentials</h3>
-            <div style="margin-bottom: 1rem;">
-                <label style="display: block; font-weight: bold; margin-bottom: 0.25rem; color: #495057;">Client ID:</label>
-                <div style="font-family: 'Courier New', monospace; background: #495057; padding: 0.75rem; border-radius: 4px; border: 1px solid #313131; font-size: 0.9em; color: white;">
+        <div class="credentials-section">
+            <h3>Application Credentials</h3>
+            <div class="credential-field">
+                <label>Client ID:</label>
+                <div class="credential-value">
                     <%= application.client_id %>
                 </div>
             </div>
-            <div style="margin-bottom: 1rem;">
-                <label style="display: block; font-weight: bold; margin-bottom: 0.25rem; color: #495057;">Client Secret:</label>
-                <div style="font-family: 'Courier New', monospace; background: #495057; padding: 0.75rem; border-radius: 4px; border: 1px solid #313131; font-size: 0.9em; color: white;">
+            <div class="credential-field">
+                <label>Client Secret:</label>
+                <div class="credential-value">
                     <%= application.client_secret %>
                 </div>
             </div>
-            <small class="muted" style="font-style: italic;">Keep these credentials secure. They cannot be changed after creation.</small>
+            <small class="muted credentials-warning">Keep these credentials secure. They cannot be changed after creation.</small>
         </div>
 
         <form id="modifyOAuthForm" class="auth-form" autocomplete="off">
-            <h1 style="margin-bottom:.25rem;">Modify OAuth Application</h1>
-            <p class="muted center" style="margin-top:0;">Update OAuth application settings and credentials.</p>
+            <h1 class="oauth-form-title">Modify OAuth Application</h1>
+            <p class="muted center oauth-form-subtitle">Update OAuth application settings and credentials.</p>
             
             <input type="hidden" id="application-id" value="<%= application.id %>">
             
@@ -49,7 +49,7 @@
             <div class="field">
                 <label for="t_redirect_uris">Redirect URIs</label>
                 <textarea id="t_redirect_uris" rows="4" required><%= application.redirect_uris.join('\n') %></textarea>
-                <p class="muted" style="font-size:.65rem; margin:.4rem 0 0;">One redirect URI per line. Users will be redirected here after authorization.</p>
+                <p class="muted redirect-help">One redirect URI per line. Users will be redirected here after authorization.</p>
             </div>
             
             <div class="field">
@@ -60,7 +60,7 @@
                         <input type="text" id="scopeInput" placeholder="Type scopes (comma-separated)" aria-label="Add scopes" />
                         <button type="button" id="clearScopes" class="btn btn-ghost small" title="Clear all">Clear</button>
                     </div>
-                    <p class="muted" style="font-size:.65rem; margin:.4rem 0 0;">Examples: read, write, user:profile (separate with commas)</p>
+                    <p class="muted scope-help">Examples: read, write, user:profile (separate with commas)</p>
                 </div>
             </div>
             

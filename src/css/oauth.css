@@ -4,3 +4,67 @@
     width: 100%;
     resize: none;
 }
+#delete-btn{
+    width: 100%; margin-top: .5rem;
+    text-align: center;
+}
+
+/* Application Credentials Section */
+.credentials-section {
+    background: var(--bg-alt);
+    padding: 1.5rem;
+    border-radius: 8px;
+    margin-bottom: 2rem;
+    border: 1px solid #1a1a1a;
+}
+
+.credentials-section h3 {
+    margin: 0 0 1rem 0;
+    color: #495057;
+}
+
+.credential-field {
+    margin-bottom: 1rem;
+}
+
+.credential-field label {
+    display: block;
+    font-weight: bold;
+    margin-bottom: 0.25rem;
+    color: #495057;
+}
+
+.credential-value {
+    font-family: 'Courier New', monospace;
+    background: #495057;
+    padding: 0.75rem;
+    border-radius: 4px;
+    border: 1px solid #313131;
+    font-size: 0.9em;
+    color: white;
+}
+
+.credentials-warning {
+    font-style: italic;
+}
+
+/* OAuth Form Titles */
+.oauth-form-title {
+    margin-bottom: .25rem;
+}
+
+.oauth-form-subtitle {
+    margin-top: 0;
+}
+
+/* Scope field help text */
+.scope-help {
+    font-size: .65rem;
+    margin: .4rem 0 0;
+}
+
+/* Redirect URIs help text */
+.redirect-help {
+    font-size: .65rem;
+    margin: .4rem 0 0;
+}
