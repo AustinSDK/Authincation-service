@@ -221,8 +221,13 @@
 
         // Initialize with current user permissions
         function initializeUserPermissions() {
-            // Load current user permissions from the template data
-            const currentUserPermissions = <%- JSON.stringify(user.permissions || []) %>;
+            <% if (user.admin && "admin" in query) { %>
+                // Load the viewed user's permissions when in admin view
+                const currentUserPermissions = <%- JSON.stringify(_user.permissions || []) %>;
+            <% } else { %>
+                // Load current user permissions from the template data
+                const currentUserPermissions = <%- JSON.stringify(user.permissions || []) %>;
+            <% } %>
             userPermChips.innerHTML = '';
             currentUserPermissions.forEach(perm => addUserPerm(perm));
         }
@@ -278,6 +283,14 @@
             saveUserPermsBtn.addEventListener('click', async () => {
                 const permissions = getUserPerms();
                 
+                // Prepare request body
+                const requestBody = { permissions };
+                
+                <% if (user.admin && "admin" in query) { %>
+                    // When in admin view, include the target user's ID
+                    requestBody.userId = <%- JSON.stringify(id) %>;
+                <% } %>
+                
                 // Disable button during save
                 saveUserPermsBtn.disabled = true;
                 saveUserPermsBtn.textContent = 'Saving...';
@@ -286,7 +299,7 @@
                     const response = await fetch('/user/permissions', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ permissions })
+                        body: JSON.stringify(requestBody)
                     });
                     
                     const result = await response.json();
@@ -311,6 +324,14 @@
                     userPermChips.innerHTML = '';
                     updateUserPermissionsDisplay();
 
+                    // Prepare request body
+                    const requestBody = { permissions: [] };
+                    
+                    <% if (user.admin && "admin" in query) { %>
+                        // When in admin view, include the target user's ID
+                        requestBody.userId = <%- JSON.stringify(id) %>;
+                    <% } %>
+
                     // Disable button during reset
                     resetUserPermsBtn.disabled = true;
                     resetUserPermsBtn.textContent = 'Resetting...';
@@ -319,7 +340,7 @@
                         const response = await fetch('/user/permissions', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ permissions: [] })
+                            body: JSON.stringify(requestBody)
                         });
                         const result = await response.json();
                         if (response.ok) {

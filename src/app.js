@@ -298,13 +298,32 @@ app.post("/user/permissions",(req,res)=>{
     }
     
     try {
-        const { permissions } = req.body;
+        const { permissions, userId } = req.body;
         
         if (!Array.isArray(permissions)) {
             return res.status(400).json({ message: "Permissions must be an array" });
         }
         
-        const result = auth.updateUserPermissions(user.id, permissions);
+        // Determine which user's permissions to update
+        let targetUserId = user.id; // Default to updating own permissions
+        
+        // If userId is provided and user is admin, allow updating other users
+        if (userId && user.admin) {
+            targetUserId = parseInt(userId, 10);
+            if (!targetUserId || isNaN(targetUserId)) {
+                return res.status(400).json({ message: "Invalid user ID" });
+            }
+            
+            // Check that target user exists
+            const targetUser = auth.getUserById(targetUserId);
+            if (!targetUser) {
+                return res.status(404).json({ message: "Target user not found" });
+            }
+        } else if (userId && !user.admin) {
+            return res.status(403).json({ message: "Permission denied: Only admins can update other users' permissions" });
+        }
+        
+        const result = auth.updateUserPermissions(targetUserId, permissions);
         res.json({ 
             message: `Successfully updated user permissions (${result.count} permissions)`,
             result 
