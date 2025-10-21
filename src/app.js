@@ -301,7 +301,15 @@ app.post("/user/permissions",(req,res)=>{
         const { permissions, userId } = req.body;
         
         if (!Array.isArray(permissions)) {
+            console.error('Invalid permissions format received:', typeof permissions);
             return res.status(400).json({ message: "Permissions must be an array" });
+        }
+        
+        // Validate permission values
+        const invalidPerms = permissions.filter(p => typeof p !== 'string' || !p.trim());
+        if (invalidPerms.length > 0) {
+            console.error('Invalid permission values:', invalidPerms);
+            return res.status(400).json({ message: "All permissions must be non-empty strings" });
         }
         
         // Determine which user's permissions to update
@@ -311,25 +319,41 @@ app.post("/user/permissions",(req,res)=>{
         if (userId && user.admin) {
             targetUserId = parseInt(userId, 10);
             if (!targetUserId || isNaN(targetUserId)) {
+                console.error('Invalid user ID provided:', userId);
                 return res.status(400).json({ message: "Invalid user ID" });
             }
             
             // Check that target user exists
             const targetUser = auth.getUserById(targetUserId);
             if (!targetUser) {
+                console.error('Target user not found:', targetUserId);
                 return res.status(404).json({ message: "Target user not found" });
             }
         } else if (userId && !user.admin) {
+            console.error('Non-admin user attempted to update other user permissions:', user.id, '->', userId);
             return res.status(403).json({ message: "Permission denied: Only admins can update other users' permissions" });
         }
         
+        console.log(`Updating permissions for user ${targetUserId}:`, permissions);
         const result = auth.updateUserPermissions(targetUserId, permissions);
+        
+        // Return both the result metadata and the updated user object
         res.json({ 
             message: `Successfully updated user permissions (${result.count} permissions)`,
-            result 
+            permissions: result.user.permissions,
+            user: result.user
         });
     } catch (error) {
-        res.status(400).json({ message: error.message });
+        console.error('Error in /user/permissions endpoint:', error.message);
+        
+        // Map specific errors to appropriate status codes
+        if (error.message.includes('not found')) {
+            return res.status(404).json({ message: error.message });
+        } else if (error.message.includes('Permissions must be')) {
+            return res.status(400).json({ message: error.message });
+        } else {
+            return res.status(500).json({ message: "Internal server error while updating permissions" });
+        }
     }
 });
 

@@ -4,7 +4,8 @@
   "description": "A coolio auth thing, mhm",
   "main": "src/app.js",
   "scripts": {
-    "test": "node src/app.js -t",
+    "test": "node tests/permissions.test.js",
+    "test:old": "node src/app.js -t",
     "start": "node src/app.js"
   },
   "repository": {

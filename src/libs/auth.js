@@ -384,22 +384,64 @@ class mhm{
         }
         
         try {
+            // Verify user exists before updating
+            const existingUser = this.db.prepare("SELECT id FROM users WHERE id = ?").get(userId);
+            if (!existingUser) {
+                console.error(`Failed to update permissions: User ${userId} not found`);
+                throw new Error("User not found");
+            }
+            
             // Convert permissions array to JSON string
             const permissionsJson = JSON.stringify(permissions);
             
             // Update user permissions in database
             const result = this.db.prepare("UPDATE users SET permissions = ? WHERE id = ?").run(permissionsJson, userId);
             
+            // Verify the update was successful
+            if (result.changes === 0) {
+                console.error(`Failed to update permissions for user ${userId}: No rows affected`);
+                throw new Error("Failed to update user permissions: No rows affected");
+            }
+            
             // Clear user cache to force reload of permissions
             if (users[String(userId)]) {
                 delete users[String(userId)];
             }
             
-            return { success: true, count: permissions.length, result };
+            // Fetch and return the updated user to verify persistence
+            const updatedUser = this.db.prepare("SELECT id, username, permissions, created_at FROM users WHERE id = ?").get(userId);
+            
+            if (!updatedUser) {
+                console.error(`Failed to fetch updated user ${userId} after permission update`);
+                throw new Error("Failed to verify updated permissions");
+            }
+            
+            // Parse permissions for the response
+            let parsedPermissions;
+            try {
+                parsedPermissions = JSON.parse(updatedUser.permissions);
+            } catch (parseError) {
+                console.error(`Failed to parse updated permissions for user ${userId}:`, parseError);
+                parsedPermissions = [];
+            }
+            
+            console.log(`Successfully updated permissions for user ${userId}: ${JSON.stringify(parsedPermissions)}`);
+            
+            return { 
+                success: true, 
+                count: permissions.length, 
+                result,
+                user: {
+                    id: updatedUser.id,
+                    username: updatedUser.username,
+                    permissions: parsedPermissions,
+                    created_at: updatedUser.created_at
+                }
+            };
             
         } catch (error) {
             console.error('Error updating user permissions:', error);
-            throw new Error("Failed to update user permissions");
+            throw error;
         }
     }
 
