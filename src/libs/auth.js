@@ -83,7 +83,7 @@ class mhm{
         });
         this.router.post("/register", limiter, async (req,res)=>{
             try {
-                const { username, password } = req.body;
+                const { username, password  } = req.body;
                 
                 // First validate the input
                 const { error, value } = userSchema.validate({
