@@ -48,9 +48,9 @@
             <p style="margin-top:.25rem;" class="muted">A super cool user account, lol, uh, mhm</p>
         </header>
         <% if (user.admin && "admin" in query) { %>
-            <h2>User actions</h2>
             <%- include('partials/admin', { user: user }) %>
         <% } %>
+        <%- include('partials/settings', { user: user }) %>
         <h2>logged in tokens</h2>
         <% tokens.forEach(token => { %>
             <p class="token">
