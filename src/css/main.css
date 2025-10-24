@@ -116,8 +116,10 @@ form.auth-form { background: var(--bg-alt); padding: 1.25rem 1.5rem 1.75rem; bor
 form.auth-form h1 { text-align: center; margin-top: 0; }
 form.auth-form label { display: block; font-size: .75rem; letter-spacing: .5px; text-transform: uppercase; margin-bottom: .35rem; color: var(--text-dim); }
 form.auth-form input[type=text],
+form.auth-form input[type=email],
 form.auth-form input[type=password] { width: 100%; padding: .65rem .6rem; font: inherit; background: var(--bg-alt2); border: 1px solid #262626; border-radius: var(--radius-sm); color: var(--text); }
 form.auth-form input[type=text]:focus,
+form.auth-form input[type=email]:focus,
 form.auth-form input[type=password]:focus { border-color: var(--accent); }
 form.auth-form .field { margin-bottom: 1rem; width: 100%; }
 form.auth-form .pw-wrapper { display: flex; align-items: stretch; gap: .5rem; }
