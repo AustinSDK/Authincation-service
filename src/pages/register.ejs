@@ -66,7 +66,7 @@
                 <label for="t_username">Username</label>
                 <input type="text" name="username" id="t_username" autocomplete="username">
             </div>
-            <div class="field">
+            <div class="field" style="display: none;">
                 <label for="t_d_username">Display Name</label>
                 <input type="text" name="display_name" id="t_d_username" autocomplete="display_name">
             </div>
@@ -110,6 +110,8 @@ let form = document.getElementById("registerForm");
 
 let username = document.getElementById("t_username");
 let password = document.getElementById("t_password");
+let email = document.getElementById("t_email");
+let display_name = document.getElementById("t_d_username");
 
 let submit = document.querySelector("form input[type=\"submit\"]")
 
@@ -137,7 +139,7 @@ form.addEventListener("submit",async e=>{
         'Content-Type': 'application/json'
         },
         method: "POST",
-        body: JSON.stringify({username:username.value,password:password.value})
+        body: JSON.stringify({username:username.value,password:password.value, email:email.value, display_name:display_name.value})
     });
     let response = await _fetch.json();
     let status = _fetch.status;

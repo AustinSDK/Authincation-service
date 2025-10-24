@@ -83,7 +83,9 @@ class mhm{
         });
         this.router.post("/register", limiter, async (req,res)=>{
             try {
-                const { username, password  } = req.body;
+                const { username, password, email, display_name } = req.body;
+
+                console.log(req.body)
                 
                 // First validate the input
                 const { error, value } = userSchema.validate({
@@ -103,7 +105,7 @@ class mhm{
                     throw new Error("Unallowed username");
                 }
                 
-                await this.createAccount(lowercaseUsername, password);
+                await this.createAccount(lowercaseUsername, display_name, email, password);
                 
                 return res.status(201).json({
                     message: "Created user account successfully!"
@@ -152,7 +154,17 @@ class mhm{
     getProjectFromId(id){
         return this.db.prepare("SELECT * FROM projects WHERE id = ?").get(id)
     }
-    createAccount = async (username, password, perms="[]") => {
+    createAccount = async (username, display_name, email, password, perms="[]") => {
+        if (!username || !email || !password || !perms){
+            console.error(`error auth.js... username ${!!username} display_name ${!!display_name} email ${!!email} password ${!!password} perms ${!!perms}`)
+            return process.exit(1)
+        }
+        
+        // If display_name is empty, use username as default
+        if (!display_name || display_name.trim() === '') {
+            display_name = username;
+        }
+        
         try {
             const existingUser = this.db.prepare("SELECT * FROM users WHERE username LIKE ?").get(username);
             if (existingUser) {
@@ -161,7 +173,7 @@ class mhm{
 
             // hash password and insert new user
             const hashedPassword = await hash(password);
-            return this.db.prepare("INSERT INTO users (username, password, permissions) VALUES (?, ?, ?)").run(username, hashedPassword, perms);
+            return this.db.prepare("INSERT INTO users (username, password, email, permissions, display_name) VALUES (?, ?, ?, ?, ?)").run(username, hashedPassword, email, perms, display_name);
         } catch (error) {
             if (error.message === "Account already exists") {
                 throw error;
