@@ -6,7 +6,10 @@
   "scripts": {
     "test": "node tests/permissions.test.js",
     "test:old": "node src/app.js -t",
-    "start": "node src/app.js"
+    "start": "node src/app.js",
+    "migrate": "node src/db-migration.js",
+    "extra_resources": "curl -o block.txt \"https://raw.githubusercontent.com/disposable-email-domains/disposable-email-domains/refs/heads/main/disposable_email_blocklist.conf\"",
+    "credits": "node scripts/generate-credits.js"
   },
   "repository": {
     "type": "git",
@@ -27,13 +30,18 @@
     "argon2": "^0.44.0",
     "bcryptjs": "^3.0.2",
     "better-sqlite3": "^12.2.0",
+    "colors": "^1.4.0",
     "cookie-parser": "^1.4.7",
     "dotenv": "^17.2.1",
     "ejs": "^3.1.10",
     "express": "^5.1.0",
     "express-rate-limit": "^8.0.1",
+    "form-data": "^4.0.4",
     "joi": "^18.0.1",
     "jsonwebtoken": "^9.0.2",
+    "mailgun.js": "^12.1.1",
+    "sqlite-auto-migrator": "^1.3.1",
     "sqlite3": "^5.1.7"
-  }
+  },
+  "type": "commonjs"
 }

@@ -83,7 +83,10 @@ class mhm{
         });
         this.router.post("/register", limiter, async (req,res)=>{
             try {
-                const { username, password } = req.body;
+                const { username, password, email, display_name } = req.body;
+                const crypto = require('crypto');
+
+                console.log(req.body)
                 
                 // First validate the input
                 const { error, value } = userSchema.validate({
@@ -96,6 +99,67 @@ class mhm{
                     });
                 }
 
+                // Validate email if provided, or generate UUID email
+                let trimmedEmail = null;
+                let emailVerified = 0; // Default to unverified
+                
+                if (email && email.trim()) {
+                    // Real email provided - validate and check blocklist
+                    trimmedEmail = email.trim().toLowerCase();
+                    const emailRegex = /^[a-zA-Z0-9._+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+                    if (!emailRegex.test(trimmedEmail)) {
+                        return res.status(400).json({ message: "Invalid email format" });
+                    }
+                    
+                    if (trimmedEmail.length > 254) {
+                        return res.status(400).json({ message: "Email address is too long" });
+                    }
+                    
+                    if (trimmedEmail.startsWith('.') || trimmedEmail.endsWith('.') || 
+                        trimmedEmail.includes('..') || trimmedEmail.split('@')[0].length > 64) {
+                        return res.status(400).json({ message: "Invalid email format" });
+                    }
+                    
+                    // Check if email domain is blocked
+                    const Email = require('./email');
+                    const emailService = new Email();
+                    if (emailService.isEmailBlocked(trimmedEmail)) {
+                        return res.status(400).json({ message: "Email domain is not allowed" });
+                    }
+                    
+                    // Check if email already exists
+                    const existingEmail = this.db.prepare("SELECT id FROM users WHERE LOWER(email) = ?").get(trimmedEmail);
+                    if (existingEmail) {
+                        return res.status(400).json({ message: "Email already in use" });
+                    }
+                    emailVerified = 0; // Requires verification
+                } else {
+                    // No email provided - generate UUID email and mark as verified
+                    const uuid = crypto.randomUUID();
+                    trimmedEmail = `${uuid}@auth.austinsdk.me`;
+                    emailVerified = 1; // Auto-verify UUID emails
+                }
+
+                // Validate display_name if provided
+                let validatedDisplayName = display_name;
+                if (display_name && display_name.trim()) {
+                    const trimmedDisplayName = display_name.trim();
+                    
+                    if (trimmedDisplayName.length < 2) {
+                        return res.status(400).json({ message: "Display name must be at least 2 characters long" });
+                    }
+                    if (trimmedDisplayName.length > 50) {
+                        return res.status(400).json({ message: "Display name must be at most 50 characters long" });
+                    }
+                    
+                    const displayNameRegex = /^[a-zA-Z0-9 ]+$/;
+                    if (!displayNameRegex.test(trimmedDisplayName)) {
+                        return res.status(400).json({ message: "Display name can only contain letters, numbers, and spaces" });
+                    }
+                    
+                    validatedDisplayName = trimmedDisplayName;
+                }
+
                 // Then check blocked usernames
                 let blocked = ['admin','root','webmaster','test','null'];
                 const lowercaseUsername = String(username).toLowerCase();
@@ -103,7 +167,9 @@ class mhm{
                     throw new Error("Unallowed username");
                 }
                 
-                await this.createAccount(lowercaseUsername, password);
+                await this.createAccount(lowercaseUsername, validatedDisplayName, trimmedEmail, password, "[]", emailVerified);
+                
+                // Don't send verification email automatically - user must click verify button in settings
                 
                 return res.status(201).json({
                     message: "Created user account successfully!"
@@ -152,7 +218,17 @@ class mhm{
     getProjectFromId(id){
         return this.db.prepare("SELECT * FROM projects WHERE id = ?").get(id)
     }
-    createAccount = async (username, password, perms="[]") => {
+    createAccount = async (username, display_name, email, password, perms="[]", email_verified=0) => {
+        if (!username || !password || !perms){
+            console.error(`error auth.js... username ${!!username} display_name ${!!display_name} email ${!!email} password ${!!password} perms ${!!perms}`)
+            return process.exit(1)
+        }
+        
+        // If display_name is empty, use username as default
+        if (!display_name || display_name.trim() === '') {
+            display_name = username;
+        }
+        
         try {
             const existingUser = this.db.prepare("SELECT * FROM users WHERE username LIKE ?").get(username);
             if (existingUser) {
@@ -161,7 +237,7 @@ class mhm{
 
             // hash password and insert new user
             const hashedPassword = await hash(password);
-            return this.db.prepare("INSERT INTO users (username, password, permissions) VALUES (?, ?, ?)").run(username, hashedPassword, perms);
+            return this.db.prepare("INSERT INTO users (username, password, email, permissions, display_name, email_verified) VALUES (?, ?, ?, ?, ?, ?)").run(username, hashedPassword, email || null, perms, display_name, email_verified);
         } catch (error) {
             if (error.message === "Account already exists") {
                 throw error;
@@ -452,6 +528,20 @@ class mhm{
         }
         users[String(userId)] = this.db.prepare("SELECT * FROM  users WHERE id = ?").get(userId)
         return users[String(userId)]
+    }
+
+    // Refresh user cache - forces reload from database
+    refreshUserCache(userId) {
+        // Clear the cached user data
+        if (users[String(userId)]) {
+            delete users[String(userId)];
+        }
+        // Fetch fresh data from database
+        const freshUser = this.db.prepare("SELECT * FROM users WHERE id = ?").get(userId);
+        if (freshUser) {
+            users[String(userId)] = freshUser;
+        }
+        return freshUser;
     }
 
     // Get a specific user's permissions by ID

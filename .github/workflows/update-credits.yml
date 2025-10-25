@@ -1,0 +1,48 @@
+name: Update README Credits
+
+on:
+  push:
+    paths:
+      - 'package.json'
+      - 'package-lock.json'
+    branches:
+      - main
+      - emails
+  workflow_dispatch:
+
+jobs:
+  update-credits:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      
+      - name: Install dependencies
+        run: npm install
+      
+      - name: Generate credits
+        run: node scripts/generate-credits.js
+      
+      - name: Check for changes
+        id: git-check
+        run: |
+          git diff --exit-code readme.md || echo "changed=true" >> $GITHUB_OUTPUT
+      
+      - name: Commit and push if changed
+        if: steps.git-check.outputs.changed == 'true'
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add readme.md
+          git commit -m "docs: auto-update credits section"
+          git push

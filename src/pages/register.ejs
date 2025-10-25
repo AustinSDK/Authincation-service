@@ -29,7 +29,7 @@
             flex-direction: column;
             align-items: center;
         }
-        form input[type="text"], form input[type="password"]{
+        form input[type="text"], form input[type="password"], form input[type="email"]{
             background: none;
             border: none;
             border-bottom: 1px rgb(139, 139, 139) solid;
@@ -66,7 +66,16 @@
                 <label for="t_username">Username</label>
                 <input type="text" name="username" id="t_username" autocomplete="username">
             </div>
+            <div class="field" style="display: none;">
+                <label for="t_d_username">Display Name</label>
+                <input type="text" name="display_name" id="t_d_username" autocomplete="display_name">
+            </div>
             <div class="field">
+                <label for="t_email">Email (Optional)</label><!---->
+                <input type="email" name="email" id="t_email" autocomplete="email">
+                <small class="muted" style="display: block; margin-top: 0.25rem;">Optional - Leave blank to skip</small>
+            </div>
+            <div class="field"> 
                 <label for="t_password">Password</label>
                 <div class="pw-wrapper">
                     <input type="password" name="password" id="t_password" autocomplete="new-password">
@@ -102,6 +111,8 @@ let form = document.getElementById("registerForm");
 
 let username = document.getElementById("t_username");
 let password = document.getElementById("t_password");
+let email = document.getElementById("t_email");
+let display_name = document.getElementById("t_d_username");
 
 let submit = document.querySelector("form input[type=\"submit\"]")
 
@@ -129,7 +140,7 @@ form.addEventListener("submit",async e=>{
         'Content-Type': 'application/json'
         },
         method: "POST",
-        body: JSON.stringify({username:username.value,password:password.value})
+        body: JSON.stringify({username:username.value,password:password.value, email:email.value, display_name:display_name.value})
     });
     let response = await _fetch.json();
     let status = _fetch.status;

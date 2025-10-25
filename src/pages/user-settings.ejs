@@ -8,7 +8,145 @@
     <link rel="stylesheet" href="/css/settings.css">
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css" />
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+    <style>
+        /* Email Verification Banner Styles */
+        .verification-banner {
+            background: linear-gradient(135deg, var(--bg-alt2) 0%, var(--bg-alt) 100%);
+            border: 1px solid var(--accent);
+            border-left: 4px solid var(--accent);
+            border-radius: var(--radius);
+            padding: 1.25rem;
+            margin-bottom: 1.5rem;
+            box-shadow: var(--shadow);
+            animation: slideDown 0.3s ease-out;
+        }
+
+        .verification-banner-header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .verification-banner-header .icon {
+            font-size: 1.5rem;
+            color: var(--accent);
+        }
+
+        .verification-banner-header h3 {
+            margin: 0;
+            font-size: 1.1rem;
+            color: var(--text);
+            font-weight: 600;
+        }
+
+        .verification-banner p {
+            margin: 0.5rem 0;
+            color: var(--text-dim);
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+
+        .verification-banner .email-display {
+            background: var(--bg);
+            padding: 0.5rem 0.75rem;
+            border-radius: var(--radius-sm);
+            margin: 0.75rem 0;
+            font-family: monospace;
+            word-break: break-all;
+            color: var(--accent);
+            border: 1px solid #262626;
+            font-size: 0.9rem;
+        }
+
+        .verification-input-group {
+            display: flex;
+            gap: 0.75rem;
+            margin-top: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .verification-input-group input {
+            flex: 1;
+            min-width: 200px;
+            padding: 0.75rem;
+            font-size: 1.1rem;
+            letter-spacing: 0.3rem;
+            text-align: center;
+            background: var(--bg);
+            border: 1px solid #262626;
+            border-radius: var(--radius-sm);
+            color: var(--text);
+            font-family: monospace;
+            transition: border-color 0.3s;
+        }
+
+        .verification-input-group input:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: var(--focus);
+        }
+
+        .verification-actions {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .btn-verify {
+            padding: 0.75rem 1.25rem;
+        }
+
+        @keyframes slideDown {
+            from {
+                transform: translateY(-20px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        /* Disabled field styling */
+        .form-default input:disabled,
+        .form-default input[readonly] {
+            opacity: 0.6;
+            cursor: not-allowed;
+            background: var(--bg);
+            border-color: #1a1a1a;
+        }
+
+        .field-locked {
+            position: relative;
+        }
+
+        .field-locked::after {
+            content: '🔒';
+            position: absolute;
+            right: 0.75rem;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 1rem;
+            opacity: 0.5;
+            pointer-events: none;
+        }
+    </style>
     <script>
+        // Toast notification utility function - defined early for use in logout
+        function toToast(msg, isSuccess = false) {
+            Toastify({ 
+                text: msg, 
+                duration: 3000, 
+                gravity: 'top', 
+                position: 'right', 
+                style: { 
+                    background: isSuccess ? 'rgb(56,142,60)' : 'rgb(212,56,56)', 
+                    color: '#fff' 
+                } 
+            }).showToast();
+        }
+        
         logout = async (id) => {
             try {
                 const response = await fetch('/logout', {
@@ -24,11 +162,11 @@
                 if (response.ok) {
                     window.location.reload();
                 } else {
-                    alert('Error: ' + result.message);
+                    toToast('Error: ' + result.message);
                 }
             } catch (error) {
                 console.error('Logout error:', error);
-                alert('An error occurred while logging out');
+                toToast('An error occurred while logging out');
             }
         }
     </script>
@@ -44,13 +182,13 @@
             <% } %>
         <% } %>
         <header>
-            <h1><%= _user.username %></h1>
+            <h1><%= _user.display_name %><% if (_user.display_name !== _user.username) {%>&lt;<%= _user.username %>&gt;<% } %></h1>
             <p style="margin-top:.25rem;" class="muted">A super cool user account, lol, uh, mhm</p>
         </header>
         <% if (user.admin && "admin" in query) { %>
-            <h2>User actions</h2>
             <%- include('partials/admin', { user: user }) %>
         <% } %>
+        <%- include('partials/settings', { user: user }) %>
         <h2>logged in tokens</h2>
         <% tokens.forEach(token => { %>
             <p class="token">
@@ -63,13 +201,14 @@
             </p>
         <% }) %>
     </main>
-    
+
     <% if (user.admin && "admin" in query) { %>
     <script>
         /**
          *  User Actions
          *  
          */
+        
         let _del = false;
         let _resetpw = false;
         async function deleteAccount(){
@@ -96,14 +235,16 @@
                 let _data = await _fetch.json();
                 
                 if (_fetch.ok) {
-                    alert("Account deleted successfully");
-                    window.location.href = "/users"; // Redirect to users list
+                    toToast("Account deleted successfully", true);
+                    setTimeout(() => {
+                        window.location.href = "/users"; // Redirect to users list
+                    }, 1000);
                 } else {
-                    alert("Error: " + _data.message);
+                    toToast("Error: " + _data.message);
                 }
             } catch (error) {
                 console.error('Delete account error:', error);
-                alert("An error occurred while deleting the account");
+                toToast("An error occurred while deleting the account");
             } finally {
                 _del = false;
             }
@@ -134,13 +275,13 @@
                 let _data = await _fetch.json();
                 
                 if (_fetch.ok) {
-                    alert("Password reset successfully");
+                    toToast("Password reset successfully", true);
                 } else {
-                    alert("Error: " + _data.message);
+                    toToast("Error: " + _data.message);
                 }
             } catch (error) {
                 console.error('Reset password error:', error);
-                alert("An error occurred while resetting the password");
+                toToast("An error occurred while resetting the password");
             } finally {
                 _resetpw = false;
             }
@@ -151,20 +292,6 @@
          * User Permissions Management JavaScript
          * Handles permission management for current user
          */
-
-        // Toast notification utility function
-        function toToast(msg) {
-            Toastify({ 
-                text: msg, 
-                duration: 3000, 
-                gravity: 'top', 
-                position: 'right', 
-                style: { 
-                    background: 'rgb(212,56,56)', 
-                    color: '#fff' 
-                } 
-            }).showToast();
-        }
 
         // DOM elements for permissions management
         const userPermInput = document.getElementById('userPermInput');
@@ -359,5 +486,233 @@
         }
     </script>
     <% } %>
+    
+    <script>
+        /**
+         * Personal Information Form Handler
+         * Handles updating user's email and display name
+         */
+        const userInfoForm = document.getElementById('user_info');
+        
+        if (userInfoForm) {
+            const originalEmail = '<%= _user.email %>';
+            const originalDisplayName = '<%= _user.display_name %>';
+            
+            // Handle form submission
+            userInfoForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                const formData = new FormData(userInfoForm);
+                const email = formData.get('email');
+                const displayName = formData.get('display_name');
+                
+                // Validate display name if provided and not empty
+                if (displayName && displayName.trim()) {
+                    const trimmedDisplayName = displayName.trim();
+                    
+                    if (trimmedDisplayName.length < 2) {
+                        toToast('Display name must be at least 2 characters long');
+                        return;
+                    }
+                    if (trimmedDisplayName.length > 50) {
+                        toToast('Display name must be at most 50 characters long');
+                        return;
+                    }
+                    
+                    // Validate display name characters (only letters, numbers, and spaces)
+                    const displayNameRegex = /^[a-zA-Z0-9 ]+$/;
+                    if (!displayNameRegex.test(trimmedDisplayName)) {
+                        toToast('Display name can only contain letters, numbers, and spaces');
+                        return;
+                    }
+                }
+                
+                // Validate email if provided and not empty
+                if (email && email.trim()) {
+                    const trimmedEmail = email.trim();
+                    
+                    const emailRegex = /^[a-zA-Z0-9._+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+                    if (!emailRegex.test(trimmedEmail)) {
+                        toToast('Please enter a valid email address');
+                        return;
+                    }
+                    
+                    if (trimmedEmail.length > 254) {
+                        toToast('Email address is too long (max 254 characters)');
+                        return;
+                    }
+                }
+                
+                const saveBtn = document.getElementById('saveUserInfo');
+                saveBtn.disabled = true;
+                saveBtn.textContent = 'Saving...';
+                
+                try {
+                    const response = await fetch('/user/update-info', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            email: email,
+                            display_name: displayName
+                        })
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (response.ok) {
+                        if (result.emailChanged && result.requiresVerification) {
+                            toToast('Personal information updated! Please verify your email.', true);
+                        } else {
+                            toToast('Personal information updated successfully', true);
+                        }
+                        setTimeout(() => window.location.reload(), 1500);
+                    } else {
+                        toToast('Error: ' + result.message);
+                    }
+                } catch (error) {
+                    console.error('Update error:', error);
+                    toToast('An error occurred while updating personal information');
+                } finally {
+                    saveBtn.disabled = false;
+                    saveBtn.textContent = 'Save Changes';
+                }
+            });
+            
+            // Handle reset button
+            const resetBtn = document.getElementById('resetUserInfo');
+            if (resetBtn) {
+                resetBtn.addEventListener('click', () => {
+                    document.getElementById('email').value = originalEmail;
+                    document.getElementById('display_name').value = originalDisplayName;
+                    toToast('Form reset to original values', true);
+                });
+            }
+        }
+    </script>
+    
+    <script>
+        /**
+         * Email Verification Functions
+         */
+        
+        async function verifyEmail() {
+            const codeInput = document.getElementById('verificationCode');
+            const verifyBtn = document.getElementById('verifyBtn');
+            
+            if (!codeInput || !verifyBtn) return;
+            
+            const code = codeInput.value.trim();
+            
+            if (!code || code.length !== 6) {
+                toToast('Please enter a valid 6-digit code');
+                return;
+            }
+            
+            // Validate that code contains only numbers
+            if (!/^\d{6}$/.test(code)) {
+                toToast('Code must contain only numbers');
+                return;
+            }
+            
+            verifyBtn.disabled = true;
+            verifyBtn.textContent = 'Verifying...';
+            
+            try {
+                const response = await fetch('/user/verify-email', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ code })
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    toToast('Email verified successfully! 🎉', true);
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1500);
+                } else {
+                    toToast('Error: ' + result.message);
+                    verifyBtn.disabled = false;
+                    verifyBtn.textContent = 'Verify Email';
+                }
+            } catch (error) {
+                console.error('Verification error:', error);
+                toToast('An error occurred while verifying email');
+                verifyBtn.disabled = false;
+                verifyBtn.textContent = 'Verify Email';
+            }
+        }
+        
+        async function sendVerificationEmail() {
+            const sendBtn = document.getElementById('sendVerifyBtn');
+            
+            if (!sendBtn) return;
+            
+            sendBtn.disabled = true;
+            sendBtn.textContent = 'Sending...';
+            
+            try {
+                const response = await fetch('/user/resend-verification', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    toToast('Verification code sent! Check your email.', true);
+                    sendBtn.textContent = 'Code Sent ✓';
+                    // Focus on verification input
+                    const codeInput = document.getElementById('verificationCode');
+                    if (codeInput) {
+                        codeInput.focus();
+                    }
+                } else {
+                    toToast('Error: ' + result.message);
+                    sendBtn.disabled = false;
+                    sendBtn.textContent = 'Send Verification Email';
+                }
+            } catch (error) {
+                console.error('Send verification error:', error);
+                toToast('An error occurred while sending verification code');
+                sendBtn.disabled = false;
+                sendBtn.textContent = 'Send Verification Email';
+            } finally {
+                // Re-enable after 60 seconds to prevent spam
+                setTimeout(() => {
+                    if (sendBtn.textContent === 'Code Sent ✓') {
+                        sendBtn.disabled = false;
+                        sendBtn.textContent = 'Resend Code';
+                    }
+                }, 60000);
+            }
+        }
+        
+        // Auto-setup verification input
+        document.addEventListener('DOMContentLoaded', () => {
+            const verificationCodeInput = document.getElementById('verificationCode');
+            
+            if (verificationCodeInput) {
+                // Allow Enter key to submit
+                verificationCodeInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        verifyEmail();
+                    }
+                });
+                
+                // Auto-format input to only allow numbers
+                verificationCodeInput.addEventListener('input', (e) => {
+                    e.target.value = e.target.value.replace(/\D/g, '');
+                });
+            }
+        });
+    </script>
 </body>
 </html>

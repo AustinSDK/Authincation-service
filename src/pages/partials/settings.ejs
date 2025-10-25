@@ -1,0 +1,72 @@
+<!-- User actions :D -->
+<h2>User Information</h2>
+
+<!-- Email Verification Banner -->
+<% if (_user.id === user.id && !_user.email_verified && _user.email && !_user.email.endsWith('@auth.austinsdk.me')) { %>
+<div class="verification-banner">
+    <div class="verification-banner-header">
+        <span class="icon">⚠️</span>
+        <h3>Email Verification Required</h3>
+    </div>
+    <p>Your email address needs to be verified:</p>
+    <div class="email-display"><%= _user.email %></div>
+    <p>Click the button below to send a verification code to your email, then enter it here.</p>
+    
+    <div class="verification-input-group">
+        <input 
+            type="text" 
+            id="verificationCode" 
+            placeholder="000000" 
+            maxlength="6" 
+            pattern="[0-9]*"
+            inputmode="numeric"
+            autocomplete="off"
+        />
+        <div class="verification-actions">
+            <button type="button" class="btn btn-ghost" id="sendVerifyBtn" onclick="sendVerificationEmail()">
+                Send Verification Email
+            </button>
+            <button type="button" class="btn btn-accent btn-verify" id="verifyBtn" onclick="verifyEmail()">
+                Verify Email
+            </button>
+        </div>
+    </div>
+</div>
+<% } %>
+
+<div class="admin-section">
+    <h3>Personal Information</h3>
+    <% if (_user.id !== user.id) { %>
+        <p>Admins can not view user's personal data!</p>
+    <% } else { %>
+        <form id="user_info" class="form-default">
+            <div class="field">
+                <label for="email">Email</label>
+                <input name="email" type="email" id="email" placeholder="Email (optional)..." value="<%= _user.email %>" maxlength="254" />
+                <small class="muted">Optional - Maximum 254 characters</small>
+            </div>
+
+            <div class="field <% if (!_user.email_verified && !_user.email.endsWith('@auth.austinsdk.me')) { %>field-locked<% } %>">
+                <label for="display_name">Display Name <% if (!_user.email_verified && !_user.email.endsWith('@auth.austinsdk.me')) { %><span style="color: var(--accent);">(Verify email to edit)</span><% } %></label>
+                <input 
+                    name="display_name" 
+                    type="text" 
+                    id="display_name" 
+                    placeholder="Display Name (optional)..." 
+                    value="<%= _user.display_name %>" 
+                    minlength="2" 
+                    maxlength="50" 
+                    pattern="[a-zA-Z0-9 ]+" 
+                    title="Only letters, numbers, and spaces allowed"
+                    <% if (!_user.email_verified && !_user.email.endsWith('@auth.austinsdk.me')) { %>readonly<% } %>
+                />
+                <small class="muted">Optional - 2-50 characters (letters, numbers, and spaces only)</small>
+            </div>
+
+            <div class="admin-actions">
+                <button type="submit" id="saveUserInfo" class="btn btn-accent">Save Changes</button>
+                <button type="button" id="resetUserInfo" class="btn btn-ghost">Reset</button>
+            </div>
+        </form>
+    <% } %>
+</div>

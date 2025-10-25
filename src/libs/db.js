@@ -1,6 +1,7 @@
 const sqlite3 = require("better-sqlite3");
 const path = require("path");
 const fs = require("fs");
+const crypto = require("crypto");
 
 const dbDir = path.join(__dirname, '..', 'db');
 if (!fs.existsSync(dbDir)) {
@@ -36,17 +37,17 @@ CREATE TABLE IF NOT EXISTS tokens (
 
 CREATE TABLE IF NOT EXISTS projects (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT DEFAULT "no name project" NOT NULL,
-    description TEXT DEFAULT "no description project",
+    name TEXT DEFAULT 'no name project' NOT NULL,
+    description TEXT DEFAULT 'no description project',
     permissions TEXT DEFAULT '[]' NOT NULL,
-    link TEXT DEFAULT "/" NOT NULL,
+    link TEXT DEFAULT '/' NOT NULL,
     time_stamp DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS oauth_applications (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL,
-    description TEXT DEFAULT "",
+    description TEXT DEFAULT '',
     client_id TEXT UNIQUE NOT NULL,
     client_secret TEXT NOT NULL,
     redirect_uris TEXT DEFAULT '[]' NOT NULL,
@@ -62,7 +63,7 @@ CREATE TABLE IF NOT EXISTS oauth_authorization_codes (
     client_id TEXT NOT NULL,
     user_id INTEGER NOT NULL,
     redirect_uri TEXT NOT NULL,
-    scope TEXT DEFAULT "",
+    scope TEXT DEFAULT '',
     expires_at DATETIME NOT NULL,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (client_id) REFERENCES oauth_applications (client_id),
@@ -74,14 +75,40 @@ CREATE TABLE IF NOT EXISTS oauth_access_tokens (
     access_token TEXT UNIQUE NOT NULL,
     client_id TEXT NOT NULL,
     user_id INTEGER NOT NULL,
-    scope TEXT DEFAULT "",
+    scope TEXT DEFAULT '',
     expires_at DATETIME NOT NULL,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (client_id) REFERENCES oauth_applications (client_id),
     FOREIGN KEY (user_id) REFERENCES users (id)
 );
+
+CREATE TABLE IF NOT EXISTS email_verifications (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER,
+    email TEXT NOT NULL,
+    token TEXT NOT NULL UNIQUE,
+    purpose TEXT NOT NULL DEFAULT 'verify_email',
+    expires_at DATETIME NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    verified_at DATETIME,
+    used INTEGER DEFAULT 0,
+    sent_count INTEGER DEFAULT 0,
+    last_sent_at DATETIME,
+    ip_address TEXT,
+    meta TEXT,
+    FOREIGN KEY (user_id) REFERENCES users (id),
+    UNIQUE(email, purpose)
+);
+
+CREATE INDEX IF NOT EXISTS idx_email_verifications_token ON email_verifications(token);
+CREATE INDEX IF NOT EXISTS idx_email_verifications_user ON email_verifications(user_id);
+CREATE INDEX IF NOT EXISTS idx_email_verifications_email ON email_verifications(email);
+
     `);
 
+    // Add email and email_verified columns to users table if they don't exist
+    addColumnIfNotExists('users', 'email', 'TEXT UNIQUE');
+    addColumnIfNotExists('users', 'email_verified', 'INTEGER DEFAULT 0');
     
     // Update existing records with null or empty permissions
     try {
@@ -114,6 +141,146 @@ CREATE TABLE IF NOT EXISTS oauth_access_tokens (
 };
 
 migrate();
+
+// Run migrations automatically after initial migration
+(async () => {
+    try {
+        const migrationsDir = path.join(__dirname, '..', 'migrations');
+        
+        // Only proceed if migrations directory exists
+        if (!fs.existsSync(migrationsDir)) {
+            console.log('No migrations directory found, skipping migration scripts.');
+            return;
+        }
+
+        // Create migrations table if it doesn't exist
+        db.exec(`
+            CREATE TABLE IF NOT EXISTS migrations (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT UNIQUE NOT NULL,
+                file_hash TEXT NOT NULL,
+                applied_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            )
+        `);
+
+        // Get all migration files and sort them
+        const migrationFiles = fs.readdirSync(migrationsDir)
+            .filter(file => file.endsWith('.js'))
+            .sort();
+
+        // Helper function to calculate file hash
+        function calculateFileHash(filePath) {
+            const fileContent = fs.readFileSync(filePath, 'utf8');
+            return crypto.createHash('sha256').update(fileContent).digest('hex');
+        }
+
+        // Get already applied migrations with their hashes
+        const appliedMigrations = db.prepare('SELECT name, file_hash FROM migrations').all();
+        const appliedMigrationsMap = new Map(appliedMigrations.map(row => [row.name, row.file_hash]));
+
+        let appliedCount = 0;
+
+        for (const file of migrationFiles) {
+            const migrationName = path.basename(file, '.js');
+            const migrationPath = path.join(migrationsDir, file);
+            const currentHash = calculateFileHash(migrationPath);
+            
+            const isApplied = appliedMigrationsMap.has(migrationName);
+            const storedHash = appliedMigrationsMap.get(migrationName);
+            const hashChanged = isApplied && storedHash !== currentHash;
+            
+            // Skip if already applied and hash matches
+            if (isApplied && !hashChanged) {
+                continue;
+            }
+
+            if (hashChanged) {
+                console.log(`Hash changed for '${migrationName}' - reapplying migration...`);
+            } else {
+                console.log(`Applying migration '${migrationName}'...`);
+            }
+            
+            try {
+                const migration = require(migrationPath);
+                
+                if (!migration.up || typeof migration.up !== 'function') {
+                    console.error(`Migration '${migrationName}' missing 'up' function`);
+                    continue;
+                }
+
+                // If hash changed and there's a down function, run it first
+                if (hashChanged && migration.down && typeof migration.down === 'function') {
+                    const dbWrapper = {
+                        run: (sql, params) => {
+                            if (params) {
+                                return db.prepare(sql).run(...(Array.isArray(params) ? params : [params]));
+                            }
+                            return db.prepare(sql).run();
+                        },
+                        all: (sql, params) => {
+                            if (params) {
+                                return db.prepare(sql).all(...(Array.isArray(params) ? params : [params]));
+                            }
+                            return db.prepare(sql).all();
+                        },
+                        get: (sql, params) => {
+                            if (params) {
+                                return db.prepare(sql).get(...(Array.isArray(params) ? params : [params]));
+                            }
+                            return db.prepare(sql).get();
+                        }
+                    };
+                    await migration.down(dbWrapper);
+                }
+
+                // Wrap db operations for the migration
+                const dbWrapper = {
+                    run: (sql, params) => {
+                        if (params) {
+                            return db.prepare(sql).run(...(Array.isArray(params) ? params : [params]));
+                        }
+                        return db.prepare(sql).run();
+                    },
+                    all: (sql, params) => {
+                        if (params) {
+                            return db.prepare(sql).all(...(Array.isArray(params) ? params : [params]));
+                        }
+                        return db.prepare(sql).all();
+                    },
+                    get: (sql, params) => {
+                        if (params) {
+                            return db.prepare(sql).get(...(Array.isArray(params) ? params : [params]));
+                        }
+                        return db.prepare(sql).get();
+                    }
+                };
+
+                await migration.up(dbWrapper);
+                
+                // Record or update the migration with new hash
+                if (hashChanged) {
+                    db.prepare('UPDATE migrations SET file_hash = ?, applied_at = CURRENT_TIMESTAMP WHERE name = ?')
+                        .run(currentHash, migrationName);
+                    console.log(`Migration '${migrationName}' reapplied successfully!`);
+                } else {
+                    db.prepare('INSERT INTO migrations (name, file_hash) VALUES (?, ?)')
+                        .run(migrationName, currentHash);
+                    console.log(`Migration '${migrationName}' applied successfully!`);
+                }
+                appliedCount++;
+            } catch (error) {
+                console.error(`Migration '${migrationName}' failed:`, error.message);
+                // Don't exit, just log the error and continue
+            }
+        }
+
+        if (appliedCount > 0) {
+            console.log(`Applied ${appliedCount} migration(s) successfully!`);
+        }
+    } catch (error) {
+        console.error('Error running migrations:', error);
+    }
+})();
 
 
 module.exports = db
