@@ -40,6 +40,9 @@ async function up(db) {
       expires_at DATETIME NOT NULL,
       verified_at DATETIME,
       used INTEGER NOT NULL DEFAULT 0,
+      sent_count INTEGER NOT NULL DEFAULT 0,
+      last_sent_at DATETIME,
+      ip_address TEXT,
       meta TEXT,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
