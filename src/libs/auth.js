@@ -466,6 +466,20 @@ class mhm{
         return users[String(userId)]
     }
 
+    // Refresh user cache - forces reload from database
+    refreshUserCache(userId) {
+        // Clear the cached user data
+        if (users[String(userId)]) {
+            delete users[String(userId)];
+        }
+        // Fetch fresh data from database
+        const freshUser = this.db.prepare("SELECT * FROM users WHERE id = ?").get(userId);
+        if (freshUser) {
+            users[String(userId)] = freshUser;
+        }
+        return freshUser;
+    }
+
     // Get a specific user's permissions by ID
     getUserPermissionsById(userId) {
         return this.getUserPermissions(userId);

@@ -379,6 +379,51 @@ app.post("/resetPassword", async (req, res) => {
     }
 });
 
+// Update user personal information (own account only, not even admins can change others)
+app.post("/user/update-info", async (req, res) => {
+    let user = req.user;
+    if (!user) {
+        return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    try {
+        const { email, display_name } = req.body;
+        
+        if (!email || !display_name) {
+            return res.status(400).json({ message: "Email and display name are required" });
+        }
+
+        // Users can only update their own personal information
+        // Not even admins can change someone else's personal data
+        
+        // Validate email format
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            return res.status(400).json({ message: "Invalid email format" });
+        }
+        
+        // Check if email is already taken by another user
+        const existingUser = auth.db.prepare("SELECT id FROM users WHERE email = ? AND id != ?").get(email, user.id);
+        if (existingUser) {
+            return res.status(400).json({ message: "Email already in use by another account" });
+        }
+        
+        // Update user information
+        auth.db.prepare("UPDATE users SET email = ?, display_name = ? WHERE id = ?")
+            .run(email, display_name, user.id);
+        
+        // Force cache refresh by clearing and reloading the user from database
+        // This ensures the next request will fetch the updated user data
+        auth.refreshUserCache(user.id);
+        
+        res.json({ message: "Personal information updated successfully" });
+        
+    } catch (error) {
+        console.error('Error updating user info:', error);
+        res.status(500).json({ message: "Error updating personal information" });
+    }
+});
+
 // Delete user account (admin only)
 app.post("/deleteAccount", (req, res) => {
     let user = req.user;

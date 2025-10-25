@@ -44,7 +44,7 @@
             <% } %>
         <% } %>
         <header>
-            <h1><%= _user.username %></h1>
+            <h1><%= _user.display_name %><% if (_user.display_name !== _user.username) {%>&lt;asd;&gt;<% } %></h1>
             <p style="margin-top:.25rem;" class="muted">A super cool user account, lol, uh, mhm</p>
         </header>
         <% if (user.admin && "admin" in query) { %>
@@ -359,5 +359,80 @@
         }
     </script>
     <% } %>
+    
+    <script>
+        /**
+         * Personal Information Form Handler
+         * Handles updating user's email and display name
+         */
+        const userInfoForm = document.getElementById('user_info');
+        
+        if (userInfoForm) {
+            const originalEmail = '<%= _user.email %>';
+            const originalDisplayName = '<%= _user.display_name %>';
+            
+            // Handle form submission
+            userInfoForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                const formData = new FormData(userInfoForm);
+                const email = formData.get('email').trim();
+                const displayName = formData.get('display_name').trim();
+                
+                // Validate inputs
+                if (!email || !displayName) {
+                    alert('Email and Display Name are required');
+                    return;
+                }
+                
+                // Check if anything changed
+                if (email === originalEmail && displayName === originalDisplayName) {
+                    alert('No changes detected');
+                    return;
+                }
+                
+                const saveBtn = document.getElementById('saveUserInfo');
+                saveBtn.disabled = true;
+                saveBtn.textContent = 'Saving...';
+                
+                try {
+                    const response = await fetch('/user/update-info', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            email: email,
+                            display_name: displayName
+                        })
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (response.ok) {
+                        alert('Personal information updated successfully');
+                        window.location.reload();
+                    } else {
+                        alert('Error: ' + result.message);
+                    }
+                } catch (error) {
+                    console.error('Update error:', error);
+                    alert('An error occurred while updating personal information');
+                } finally {
+                    saveBtn.disabled = false;
+                    saveBtn.textContent = 'Save Changes';
+                }
+            });
+            
+            // Handle reset button
+            const resetBtn = document.getElementById('resetUserInfo');
+            if (resetBtn) {
+                resetBtn.addEventListener('click', () => {
+                    document.getElementById('email').value = originalEmail;
+                    document.getElementById('display_name').value = originalDisplayName;
+                });
+            }
+        }
+    </script>
 </body>
 </html>

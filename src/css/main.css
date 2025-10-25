@@ -121,7 +121,7 @@ form.auth-form input[type=password] { width: 100%; padding: .65rem .6rem; font: 
 form.auth-form input[type=text]:focus,
 form.auth-form input[type=email]:focus,
 form.auth-form input[type=password]:focus { border-color: var(--accent); }
-form.auth-form .field { margin-bottom: 1rem; width: 100%; }
+form .field { margin-bottom: 1rem; width: 100%; }
 form.auth-form .pw-wrapper { display: flex; align-items: stretch; gap: .5rem; }
 form.auth-form .pw-wrapper input { flex: 1; }
 form.auth-form button.toggle-pw { background: var(--bg-alt2); border: 1px solid #262626; color: var(--text-dim); border-radius: var(--radius-sm); padding: .55rem .75rem; cursor: pointer; }
@@ -149,10 +149,52 @@ form.auth-form input[disabled], .btn[disabled] { opacity: .5; cursor: not-allowe
 body { animation: fadeIn .4s ease; }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
 
-.permission-editor { background: var(--bg-alt); border:1px solid #1a1a1a; padding:.85rem .9rem 1rem; border-radius: var(--radius); }
-.permission-editor .perm-add-row { display:flex; gap:.5rem; margin-top:.55rem; }
-.permission-editor input[type=text] { flex:1; padding:.55rem .6rem; font:inherit; background: var(--bg-alt2); border:1px solid #262626; border-radius: var(--radius-sm); color:var(--text); }
-.permission-editor input[type=text]:focus { border-color: var(--accent); }
+/* Default form styles (used as the default form and shared by .permission-editor) */
+.form-default,
+.permission-editor,
+form:not(.auth-form) {
+    background: var(--bg-alt);
+    border: 1px solid #1a1a1a;
+    padding: .85rem .9rem 1rem;
+    border-radius: var(--radius);
+}
+
+/* Inputs for the default form / permission editor / non-auth forms */
+.form-default input[type=text],
+.form-default input[type=email],
+.form-default input[type=password],
+.permission-editor input[type=text],
+.permission-editor input[type=email],
+.permission-editor input[type=password],
+form:not(.auth-form) input[type=text],
+form:not(.auth-form) input[type=email],
+form:not(.auth-form) input[type=password] {
+    width: 100%;
+    padding: .55rem .6rem;
+    font: inherit;
+    background: var(--bg-alt2);
+    border: 1px solid #262626;
+    border-radius: var(--radius-sm);
+    color: var(--text);
+}
+.form-default input[type=text]:focus,
+.form-default input[type=email]:focus,
+.form-default input[type=password]:focus,
+.permission-editor input[type=text]:focus,
+.permission-editor input[type=email]:focus,
+.permission-editor input[type=password]:focus,
+form:not(.auth-form) input[type=text]:focus,
+form:not(.auth-form) input[type=email]:focus,
+form:not(.auth-form) input[type=password]:focus {
+    border-color: var(--accent);
+}
+
+/* Specific rules that are unique to .permission-editor */
+.permission-editor .perm-add-row {
+    display: flex;
+    gap: .5rem;
+    margin-top: .55rem;
+}
 .chips { display:flex; flex-wrap:wrap; gap:.4rem; min-height:2rem; }
 .chip { --c: var(--bg-alt2); background: var(--c); border:1px solid #262626; padding:.35rem .55rem; border-radius: 999px; font-size:.65rem; letter-spacing:.5px; text-transform: lowercase; color: var(--text-dim); cursor:pointer; display:inline-flex; gap:.4ch; align-items:center; }
 .chip:hover { color: var(--text); border-color:#2f2f2f; }

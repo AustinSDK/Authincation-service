@@ -3,6 +3,23 @@
 <div class="admin-section">
     <h3>Personal Information</h3>
     <% if (_user.id !== user.id) { %>
-     <p>Admins can not view user's personal data!</p>
+        <p>Admins can not view user's personal data!</p>
+    <% } else { %>
+        <form id="user_info" class="form-default">
+            <div class="field">
+                <label for="email">Email</label>
+                <input name="email" type="email" id="email" placeholder="Email..." value="<%= _user.email %>" required />
+            </div>
+
+            <div class="field">
+                <label for="display_name">Display Name</label>
+                <input name="display_name" type="text" id="display_name" placeholder="Display Name..." value="<%= _user.display_name %>" required />
+            </div>
+
+            <div class="admin-actions">
+                <button type="submit" id="saveUserInfo" class="btn btn-accent">Save Changes</button>
+                <button type="button" id="resetUserInfo" class="btn btn-ghost">Reset</button>
+            </div>
+        </form>
     <% } %>
 </div>
