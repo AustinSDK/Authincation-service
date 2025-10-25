@@ -16,6 +16,23 @@ async function up(db) {
       UPDATE users SET display_name = NEW.username WHERE id = NEW.id;
     END;
   `);
+
+  // create email_verifications table
+  await db.run(`
+    CREATE TABLE IF NOT EXISTS email_verifications (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL,
+      email TEXT NOT NULL,
+      token TEXT NOT NULL UNIQUE,
+      purpose TEXT NOT NULL,
+      expires_at DATETIME NOT NULL,
+      verified_at DATETIME,
+      used INTEGER NOT NULL DEFAULT 0,
+      meta TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    )
+  `);
 }
 
 async function down(db) {
@@ -34,6 +51,9 @@ async function down(db) {
   `);
   await db.run('INSERT INTO users (id, username, password, permissions, created_at) SELECT id, username, password, permissions, created_at FROM users_temp;');
   await db.run('DROP TABLE users_temp;');
+  
+  // Drop the email_verifications table
+  await db.run('DROP TABLE IF EXISTS email_verifications;');
 }
 
 module.exports = { up, down };
