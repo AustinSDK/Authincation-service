@@ -453,6 +453,11 @@ app.post("/user/update-info", async (req, res) => {
                     return res.status(400).json({ message: "Invalid email format" });
                 }
                 
+                // Check if email domain is blocked
+                if (emailService.isEmailBlocked(trimmedEmail)) {
+                    return res.status(400).json({ message: "Email domain is not allowed" });
+                }
+                
                 // Check if email is already in use by another user
                 const existingEmail = auth.db.prepare('SELECT id FROM users WHERE LOWER(email) = ? AND id != ?').get(trimmedEmail, user.id);
                 if (existingEmail) {
@@ -490,28 +495,8 @@ app.post("/user/update-info", async (req, res) => {
             const sql = `UPDATE users SET ${updates.join(', ')} WHERE id = ?`;
             auth.db.prepare(sql).run(...params);
             
-            // Send verification email if email was changed and it's a real email (not UUID)
-            if (emailChanged && trimmedEmail && !trimmedEmail.endsWith('@auth.austinsdk.me')) {
-                try {
-                    await emailService.sendVerificationEmail(trimmedEmail, {
-                        subject: 'Verify Your Email Address',
-                        purpose: 'verify_email',
-                        userId: user.id,
-                        username: user.username,
-                        ipAddress: req.ip || req.connection.remoteAddress,
-                        meta: {
-                            action: 'email_change',
-                            timestamp: new Date().toISOString()
-                        },
-                        useTemplate: true
-                    });
-                    
-                    console.log(`Verification email sent to ${trimmedEmail} for user ${user.id}`);
-                } catch (emailError) {
-                    console.error('Error sending verification email:', emailError);
-                    // Don't fail the update if email sending fails
-                }
-            } else if (emailChanged && trimmedEmail && trimmedEmail.endsWith('@auth.austinsdk.me')) {
+            // Don't send verification email automatically - user must click verify button in settings
+            if (emailChanged && trimmedEmail && trimmedEmail.endsWith('@auth.austinsdk.me')) {
                 // Auto-verify UUID emails
                 auth.db.prepare('UPDATE users SET email_verified = 1 WHERE id = ?').run(user.id);
                 console.log(`Auto-verified UUID email for user ${user.id}`);
@@ -567,7 +552,7 @@ app.post("/user/verify-email", async (req, res) => {
     }
 });
 
-// Resend verification email
+// Send verification email (manual trigger - user must click button in settings)
 app.post("/user/resend-verification", async (req, res) => {
     let user = req.user;
     if (!user) {

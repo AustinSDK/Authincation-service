@@ -7,7 +7,9 @@
     "test": "node tests/permissions.test.js",
     "test:old": "node src/app.js -t",
     "start": "node src/app.js",
-    "migrate": "node src/db-migration.js"
+    "migrate": "node src/db-migration.js",
+    "extra_resources": "curl -o block.txt \"https://raw.githubusercontent.com/disposable-email-domains/disposable-email-domains/refs/heads/main/disposable_email_blocklist.conf\"",
+    "credits": "node scripts/generate-credits.js"
   },
   "repository": {
     "type": "git",

@@ -5,6 +5,7 @@ const dotenv = require('dotenv');
 const db = require('./db.js');
 const ejs = require('ejs');
 const path = require('path');
+const fs = require('fs');
 
 dotenv.config();
 
@@ -20,6 +21,46 @@ class Email {
         this.domain = this.fromAddr.split('@')[1];
         
         this.codeExpiration = 15 * 60 * 1000; // 15 minutes in milliseconds
+        
+        // Load blocked domains
+        this.blockedDomains = this.loadBlockedDomains();
+    }
+
+    /**
+     * Load blocked email domains from block.txt
+     * @returns {Set<string>} - Set of blocked domains
+     */
+    loadBlockedDomains() {
+        try {
+            const blocklistPath = path.join(__dirname, '..', '..', 'block.txt');
+            if (fs.existsSync(blocklistPath)) {
+                const content = fs.readFileSync(blocklistPath, 'utf-8');
+                const domains = content.split('\n')
+                    .map(line => line.trim().toLowerCase())
+                    .filter(line => line && !line.startsWith('#'));
+                console.log(`Loaded ${domains.length} blocked email domains`);
+                return new Set(domains);
+            }
+            console.warn('block.txt not found, no domains blocked');
+            return new Set();
+        } catch (error) {
+            console.error('Error loading blocked domains:', error);
+            return new Set();
+        }
+    }
+
+    /**
+     * Check if an email domain is blocked
+     * @param {string} email - Email address to check
+     * @returns {boolean} - True if domain is blocked
+     */
+    isEmailBlocked(email) {
+        if (!email || typeof email !== 'string') return false;
+        
+        const domain = email.split('@')[1];
+        if (!domain) return false;
+        
+        return this.blockedDomains.has(domain.toLowerCase());
     }
 
     /**
@@ -95,6 +136,11 @@ class Email {
             meta = null,
             useTemplate = true
         } = options;
+
+        // Check if email domain is blocked
+        if (this.isEmailBlocked(to)) {
+            throw new Error('Email domain is not allowed (disposable email detected)');
+        }
 
         const code = this.generateCode();
         const expiresAt = new Date(Date.now() + this.codeExpiration).toISOString();

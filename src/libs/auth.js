@@ -104,7 +104,7 @@ class mhm{
                 let emailVerified = 0; // Default to unverified
                 
                 if (email && email.trim()) {
-                    // Real email provided - mark as unverified and will send verification email
+                    // Real email provided - validate and check blocklist
                     trimmedEmail = email.trim().toLowerCase();
                     const emailRegex = /^[a-zA-Z0-9._+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
                     if (!emailRegex.test(trimmedEmail)) {
@@ -118,6 +118,13 @@ class mhm{
                     if (trimmedEmail.startsWith('.') || trimmedEmail.endsWith('.') || 
                         trimmedEmail.includes('..') || trimmedEmail.split('@')[0].length > 64) {
                         return res.status(400).json({ message: "Invalid email format" });
+                    }
+                    
+                    // Check if email domain is blocked
+                    const Email = require('./email');
+                    const emailService = new Email();
+                    if (emailService.isEmailBlocked(trimmedEmail)) {
+                        return res.status(400).json({ message: "Email domain is not allowed" });
                     }
                     
                     // Check if email already exists
@@ -162,34 +169,7 @@ class mhm{
                 
                 await this.createAccount(lowercaseUsername, validatedDisplayName, trimmedEmail, password, "[]", emailVerified);
                 
-                // Send verification email if a real email was provided
-                if (emailVerified === 0 && trimmedEmail && !trimmedEmail.endsWith('@auth.austinsdk.me')) {
-                    try {
-                        const Email = require('./email');
-                        const emailService = new Email();
-                        
-                        // Get the newly created user's ID
-                        const newUser = this.db.prepare("SELECT id FROM users WHERE username = ?").get(lowercaseUsername);
-                        
-                        if (newUser) {
-                            await emailService.sendVerificationEmail(trimmedEmail, {
-                                subject: 'Verify Your Email Address',
-                                purpose: 'verify_email',
-                                userId: newUser.id,
-                                username: lowercaseUsername,
-                                meta: {
-                                    action: 'registration',
-                                    timestamp: new Date().toISOString()
-                                },
-                                useTemplate: true
-                            });
-                            console.log(`Verification email sent to ${trimmedEmail} for new user ${newUser.id}`);
-                        }
-                    } catch (emailError) {
-                        console.error('Error sending verification email during registration:', emailError);
-                        // Don't fail registration if email sending fails
-                    }
-                }
+                // Don't send verification email automatically - user must click verify button in settings
                 
                 return res.status(201).json({
                     message: "Created user account successfully!"

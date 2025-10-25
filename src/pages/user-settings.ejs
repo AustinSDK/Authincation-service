@@ -97,31 +97,6 @@
             padding: 0.75rem 1.25rem;
         }
 
-        .resend-link {
-            margin-top: 0.75rem;
-            text-align: left;
-        }
-
-        .resend-link button {
-            background: none;
-            border: none;
-            color: var(--text-dim);
-            text-decoration: underline;
-            cursor: pointer;
-            font-size: 0.85rem;
-            padding: 0.25rem 0;
-            transition: color 0.3s;
-        }
-
-        .resend-link button:hover:not(:disabled) {
-            color: var(--accent);
-        }
-
-        .resend-link button:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
         @keyframes slideDown {
             from {
                 transform: translateY(-20px);
@@ -673,13 +648,13 @@
             }
         }
         
-        async function resendVerification() {
-            const resendBtn = document.getElementById('resendBtn');
+        async function sendVerificationEmail() {
+            const sendBtn = document.getElementById('sendVerifyBtn');
             
-            if (!resendBtn) return;
+            if (!sendBtn) return;
             
-            resendBtn.disabled = true;
-            resendBtn.textContent = 'Sending...';
+            sendBtn.disabled = true;
+            sendBtn.textContent = 'Sending...';
             
             try {
                 const response = await fetch('/user/resend-verification', {
@@ -693,17 +668,30 @@
                 
                 if (response.ok) {
                     toToast('Verification code sent! Check your email.', true);
+                    sendBtn.textContent = 'Code Sent ✓';
+                    // Focus on verification input
+                    const codeInput = document.getElementById('verificationCode');
+                    if (codeInput) {
+                        codeInput.focus();
+                    }
                 } else {
                     toToast('Error: ' + result.message);
+                    sendBtn.disabled = false;
+                    sendBtn.textContent = 'Send Verification Email';
                 }
             } catch (error) {
-                console.error('Resend error:', error);
+                console.error('Send verification error:', error);
                 toToast('An error occurred while sending verification code');
+                sendBtn.disabled = false;
+                sendBtn.textContent = 'Send Verification Email';
             } finally {
+                // Re-enable after 60 seconds to prevent spam
                 setTimeout(() => {
-                    resendBtn.disabled = false;
-                    resendBtn.textContent = "Didn't receive the code? Click to resend";
-                }, 5000); // Prevent spam by waiting 5 seconds
+                    if (sendBtn.textContent === 'Code Sent ✓') {
+                        sendBtn.disabled = false;
+                        sendBtn.textContent = 'Resend Code';
+                    }
+                }, 60000);
             }
         }
         

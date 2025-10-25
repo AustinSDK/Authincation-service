@@ -1,1 +1,0 @@
-- update readme to not be ai

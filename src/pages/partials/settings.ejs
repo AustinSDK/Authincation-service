@@ -8,9 +8,9 @@
         <span class="icon">⚠️</span>
         <h3>Email Verification Required</h3>
     </div>
-    <p>Your email address needs to be verified. We've sent a verification code to:</p>
+    <p>Your email address needs to be verified:</p>
     <div class="email-display"><%= _user.email %></div>
-    <p>Enter the 6-digit code below to verify your email and unlock all features.</p>
+    <p>Click the button below to send a verification code to your email, then enter it here.</p>
     
     <div class="verification-input-group">
         <input 
@@ -23,16 +23,13 @@
             autocomplete="off"
         />
         <div class="verification-actions">
+            <button type="button" class="btn btn-ghost" id="sendVerifyBtn" onclick="sendVerificationEmail()">
+                Send Verification Email
+            </button>
             <button type="button" class="btn btn-accent btn-verify" id="verifyBtn" onclick="verifyEmail()">
                 Verify Email
             </button>
         </div>
-    </div>
-    
-    <div class="resend-link">
-        <button type="button" id="resendBtn" onclick="resendVerification()">
-            Didn't receive the code? Click to resend
-        </button>
     </div>
 </div>
 <% } %>
