@@ -36,17 +36,17 @@ CREATE TABLE IF NOT EXISTS tokens (
 
 CREATE TABLE IF NOT EXISTS projects (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT DEFAULT "no name project" NOT NULL,
-    description TEXT DEFAULT "no description project",
+    name TEXT DEFAULT 'no name project' NOT NULL,
+    description TEXT DEFAULT 'no description project',
     permissions TEXT DEFAULT '[]' NOT NULL,
-    link TEXT DEFAULT "/" NOT NULL,
+    link TEXT DEFAULT '/' NOT NULL,
     time_stamp DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS oauth_applications (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL,
-    description TEXT DEFAULT "",
+    description TEXT DEFAULT '',
     client_id TEXT UNIQUE NOT NULL,
     client_secret TEXT NOT NULL,
     redirect_uris TEXT DEFAULT '[]' NOT NULL,
@@ -62,7 +62,7 @@ CREATE TABLE IF NOT EXISTS oauth_authorization_codes (
     client_id TEXT NOT NULL,
     user_id INTEGER NOT NULL,
     redirect_uri TEXT NOT NULL,
-    scope TEXT DEFAULT "",
+    scope TEXT DEFAULT '',
     expires_at DATETIME NOT NULL,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (client_id) REFERENCES oauth_applications (client_id),
@@ -74,14 +74,40 @@ CREATE TABLE IF NOT EXISTS oauth_access_tokens (
     access_token TEXT UNIQUE NOT NULL,
     client_id TEXT NOT NULL,
     user_id INTEGER NOT NULL,
-    scope TEXT DEFAULT "",
+    scope TEXT DEFAULT '',
     expires_at DATETIME NOT NULL,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (client_id) REFERENCES oauth_applications (client_id),
     FOREIGN KEY (user_id) REFERENCES users (id)
 );
+
+CREATE TABLE IF NOT EXISTS email_verifications (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER,
+    email TEXT NOT NULL,
+    token TEXT NOT NULL UNIQUE,
+    purpose TEXT NOT NULL DEFAULT 'verify_email',
+    expires_at DATETIME NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    verified_at DATETIME,
+    used INTEGER DEFAULT 0,
+    sent_count INTEGER DEFAULT 0,
+    last_sent_at DATETIME,
+    ip_address TEXT,
+    meta TEXT,
+    FOREIGN KEY (user_id) REFERENCES users (id),
+    UNIQUE(email, purpose)
+);
+
+CREATE INDEX IF NOT EXISTS idx_email_verifications_token ON email_verifications(token);
+CREATE INDEX IF NOT EXISTS idx_email_verifications_user ON email_verifications(user_id);
+CREATE INDEX IF NOT EXISTS idx_email_verifications_email ON email_verifications(email);
+
     `);
 
+    // Add email and email_verified columns to users table if they don't exist
+    addColumnIfNotExists('users', 'email', 'TEXT UNIQUE');
+    addColumnIfNotExists('users', 'email_verified', 'INTEGER DEFAULT 0');
     
     // Update existing records with null or empty permissions
     try {

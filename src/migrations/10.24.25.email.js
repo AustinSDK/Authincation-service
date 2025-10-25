@@ -1,7 +1,8 @@
 async function up(db) {
-  // add email (existing) and display_name (new)
+  // add email (existing), display_name (new) and email_verified (new, default false)
   await db.run("ALTER TABLE users ADD COLUMN email TEXT NOT NULL DEFAULT 'null@austinsdk.me';");
   await db.run("ALTER TABLE users ADD COLUMN display_name TEXT;");
+  await db.run("ALTER TABLE users ADD COLUMN email_verified INTEGER NOT NULL DEFAULT 0;");
 
   // populate display_name for existing rows
   await db.run("UPDATE users SET display_name = username WHERE display_name IS NULL;");
@@ -18,7 +19,7 @@ async function up(db) {
 }
 
 async function down(db) {
-  // To rollback, we need to remove the email and display_name columns
+  // To rollback, we need to remove the email, display_name and email_verified columns
   // SQLite doesn't support DROP COLUMN directly, so we need to recreate the table
   await db.run('CREATE TABLE users_temp AS SELECT id, username, password, permissions, created_at FROM users;');
   await db.run('DROP TABLE users;');

@@ -8,6 +8,155 @@
     <link rel="stylesheet" href="/css/settings.css">
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css" />
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+    <style>
+        /* Email Verification Banner Styles */
+        .verification-banner {
+            background: linear-gradient(135deg, var(--bg-alt2) 0%, var(--bg-alt) 100%);
+            border: 1px solid var(--accent);
+            border-left: 4px solid var(--accent);
+            border-radius: var(--radius);
+            padding: 1.25rem;
+            margin-bottom: 1.5rem;
+            box-shadow: var(--shadow);
+            animation: slideDown 0.3s ease-out;
+        }
+
+        .verification-banner-header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .verification-banner-header .icon {
+            font-size: 1.5rem;
+            color: var(--accent);
+        }
+
+        .verification-banner-header h3 {
+            margin: 0;
+            font-size: 1.1rem;
+            color: var(--text);
+            font-weight: 600;
+        }
+
+        .verification-banner p {
+            margin: 0.5rem 0;
+            color: var(--text-dim);
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+
+        .verification-banner .email-display {
+            background: var(--bg);
+            padding: 0.5rem 0.75rem;
+            border-radius: var(--radius-sm);
+            margin: 0.75rem 0;
+            font-family: monospace;
+            word-break: break-all;
+            color: var(--accent);
+            border: 1px solid #262626;
+            font-size: 0.9rem;
+        }
+
+        .verification-input-group {
+            display: flex;
+            gap: 0.75rem;
+            margin-top: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .verification-input-group input {
+            flex: 1;
+            min-width: 200px;
+            padding: 0.75rem;
+            font-size: 1.1rem;
+            letter-spacing: 0.3rem;
+            text-align: center;
+            background: var(--bg);
+            border: 1px solid #262626;
+            border-radius: var(--radius-sm);
+            color: var(--text);
+            font-family: monospace;
+            transition: border-color 0.3s;
+        }
+
+        .verification-input-group input:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: var(--focus);
+        }
+
+        .verification-actions {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .btn-verify {
+            padding: 0.75rem 1.25rem;
+        }
+
+        .resend-link {
+            margin-top: 0.75rem;
+            text-align: left;
+        }
+
+        .resend-link button {
+            background: none;
+            border: none;
+            color: var(--text-dim);
+            text-decoration: underline;
+            cursor: pointer;
+            font-size: 0.85rem;
+            padding: 0.25rem 0;
+            transition: color 0.3s;
+        }
+
+        .resend-link button:hover:not(:disabled) {
+            color: var(--accent);
+        }
+
+        .resend-link button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        @keyframes slideDown {
+            from {
+                transform: translateY(-20px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        /* Disabled field styling */
+        .form-default input:disabled,
+        .form-default input[readonly] {
+            opacity: 0.6;
+            cursor: not-allowed;
+            background: var(--bg);
+            border-color: #1a1a1a;
+        }
+
+        .field-locked {
+            position: relative;
+        }
+
+        .field-locked::after {
+            content: '🔒';
+            position: absolute;
+            right: 0.75rem;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 1rem;
+            opacity: 0.5;
+            pointer-events: none;
+        }
+    </style>
     <script>
         // Toast notification utility function - defined early for use in logout
         function toToast(msg, isSuccess = false) {
@@ -77,7 +226,7 @@
             </p>
         <% }) %>
     </main>
-    
+
     <% if (user.admin && "admin" in query) { %>
     <script>
         /**
@@ -379,48 +528,44 @@
                 e.preventDefault();
                 
                 const formData = new FormData(userInfoForm);
-                const email = formData.get('email').trim();
-                const displayName = formData.get('display_name').trim();
+                const email = formData.get('email');
+                const displayName = formData.get('display_name');
                 
-                // Validate inputs
-                if (!email || !displayName) {
-                    toToast('Email and Display Name are required');
-                    return;
+                // Validate display name if provided and not empty
+                if (displayName && displayName.trim()) {
+                    const trimmedDisplayName = displayName.trim();
+                    
+                    if (trimmedDisplayName.length < 2) {
+                        toToast('Display name must be at least 2 characters long');
+                        return;
+                    }
+                    if (trimmedDisplayName.length > 50) {
+                        toToast('Display name must be at most 50 characters long');
+                        return;
+                    }
+                    
+                    // Validate display name characters (only letters, numbers, and spaces)
+                    const displayNameRegex = /^[a-zA-Z0-9 ]+$/;
+                    if (!displayNameRegex.test(trimmedDisplayName)) {
+                        toToast('Display name can only contain letters, numbers, and spaces');
+                        return;
+                    }
                 }
                 
-                // Validate display name length
-                if (displayName.length < 2) {
-                    toToast('Display name must be at least 2 characters long');
-                    return;
-                }
-                if (displayName.length > 50) {
-                    toToast('Display name must be at most 50 characters long');
-                    return;
-                }
-                
-                // Validate display name characters (only letters, numbers, and spaces)
-                const displayNameRegex = /^[a-zA-Z0-9 ]+$/;
-                if (!displayNameRegex.test(displayName)) {
-                    toToast('Display name can only contain letters, numbers, and spaces');
-                    return;
-                }
-                
-                // Validate email format
-                const emailRegex = /^[a-zA-Z0-9._+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-                if (!emailRegex.test(email)) {
-                    toToast('Please enter a valid email address');
-                    return;
-                }
-                
-                if (email.length > 254) {
-                    toToast('Email address is too long (max 254 characters)');
-                    return;
-                }
-                
-                // Check if anything changed
-                if (email.toLowerCase() === originalEmail.toLowerCase() && displayName === originalDisplayName) {
-                    toToast('No changes detected');
-                    return;
+                // Validate email if provided and not empty
+                if (email && email.trim()) {
+                    const trimmedEmail = email.trim();
+                    
+                    const emailRegex = /^[a-zA-Z0-9._+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+                    if (!emailRegex.test(trimmedEmail)) {
+                        toToast('Please enter a valid email address');
+                        return;
+                    }
+                    
+                    if (trimmedEmail.length > 254) {
+                        toToast('Email address is too long (max 254 characters)');
+                        return;
+                    }
                 }
                 
                 const saveBtn = document.getElementById('saveUserInfo');
@@ -442,8 +587,12 @@
                     const result = await response.json();
                     
                     if (response.ok) {
-                        toToast('Personal information updated successfully', true);
-                        setTimeout(() => window.location.reload(), 1000);
+                        if (result.emailChanged && result.requiresVerification) {
+                            toToast('Personal information updated! Please verify your email.', true);
+                        } else {
+                            toToast('Personal information updated successfully', true);
+                        }
+                        setTimeout(() => window.location.reload(), 1500);
                     } else {
                         toToast('Error: ' + result.message);
                     }
@@ -466,6 +615,116 @@
                 });
             }
         }
+    </script>
+    
+    <script>
+        /**
+         * Email Verification Functions
+         */
+        
+        async function verifyEmail() {
+            const codeInput = document.getElementById('verificationCode');
+            const verifyBtn = document.getElementById('verifyBtn');
+            
+            if (!codeInput || !verifyBtn) return;
+            
+            const code = codeInput.value.trim();
+            
+            if (!code || code.length !== 6) {
+                toToast('Please enter a valid 6-digit code');
+                return;
+            }
+            
+            // Validate that code contains only numbers
+            if (!/^\d{6}$/.test(code)) {
+                toToast('Code must contain only numbers');
+                return;
+            }
+            
+            verifyBtn.disabled = true;
+            verifyBtn.textContent = 'Verifying...';
+            
+            try {
+                const response = await fetch('/user/verify-email', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ code })
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    toToast('Email verified successfully! 🎉', true);
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1500);
+                } else {
+                    toToast('Error: ' + result.message);
+                    verifyBtn.disabled = false;
+                    verifyBtn.textContent = 'Verify Email';
+                }
+            } catch (error) {
+                console.error('Verification error:', error);
+                toToast('An error occurred while verifying email');
+                verifyBtn.disabled = false;
+                verifyBtn.textContent = 'Verify Email';
+            }
+        }
+        
+        async function resendVerification() {
+            const resendBtn = document.getElementById('resendBtn');
+            
+            if (!resendBtn) return;
+            
+            resendBtn.disabled = true;
+            resendBtn.textContent = 'Sending...';
+            
+            try {
+                const response = await fetch('/user/resend-verification', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    toToast('Verification code sent! Check your email.', true);
+                } else {
+                    toToast('Error: ' + result.message);
+                }
+            } catch (error) {
+                console.error('Resend error:', error);
+                toToast('An error occurred while sending verification code');
+            } finally {
+                setTimeout(() => {
+                    resendBtn.disabled = false;
+                    resendBtn.textContent = "Didn't receive the code? Click to resend";
+                }, 5000); // Prevent spam by waiting 5 seconds
+            }
+        }
+        
+        // Auto-setup verification input
+        document.addEventListener('DOMContentLoaded', () => {
+            const verificationCodeInput = document.getElementById('verificationCode');
+            
+            if (verificationCodeInput) {
+                // Allow Enter key to submit
+                verificationCodeInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        verifyEmail();
+                    }
+                });
+                
+                // Auto-format input to only allow numbers
+                verificationCodeInput.addEventListener('input', (e) => {
+                    e.target.value = e.target.value.replace(/\D/g, '');
+                });
+            }
+        });
     </script>
 </body>
 </html>

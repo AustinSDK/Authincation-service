@@ -388,68 +388,226 @@ app.post("/user/update-info", async (req, res) => {
 
     try {
         const { email, display_name } = req.body;
-        
-        if (!email || !display_name) {
-            return res.status(400).json({ message: "Email and display name are required" });
-        }
+        const crypto = require('crypto');
+        const Email = require('./libs/email');
+        const emailService = new Email();
 
         // Users can only update their own personal information
         // Not even admins can change someone else's personal data
         
-        // Validate display name
-        const trimmedDisplayName = display_name.trim();
-        if (trimmedDisplayName.length === 0) {
-            return res.status(400).json({ message: "Display name cannot be empty" });
-        }
-        if (trimmedDisplayName.length < 2) {
-            return res.status(400).json({ message: "Display name must be at least 2 characters long" });
-        }
-        if (trimmedDisplayName.length > 50) {
-            return res.status(400).json({ message: "Display name must be at most 50 characters long" });
-        }
-        // Only allow letters, numbers, and spaces (no special characters)
-        const displayNameRegex = /^[a-zA-Z0-9 ]+$/;
-        if (!displayNameRegex.test(trimmedDisplayName)) {
-            return res.status(400).json({ message: "Display name can only contain letters, numbers, and spaces" });
+        let trimmedEmail = null;
+        let trimmedDisplayName = null;
+        let emailChanged = false;
+        
+        // Handle display name
+        if (display_name !== undefined) {
+            if (!display_name || !display_name.trim()) {
+                // If blank, set to username
+                trimmedDisplayName = user.username;
+            } else {
+                trimmedDisplayName = display_name.trim();
+                
+                // Validate display name
+                if (trimmedDisplayName.length < 2) {
+                    return res.status(400).json({ message: "Display name must be at least 2 characters long" });
+                }
+                
+                if (trimmedDisplayName.length > 50) {
+                    return res.status(400).json({ message: "Display name must be at most 50 characters long" });
+                }
+                
+                // Validate display name characters (only letters, numbers, and spaces)
+                const displayNameRegex = /^[a-zA-Z0-9 ]+$/;
+                if (!displayNameRegex.test(trimmedDisplayName)) {
+                    return res.status(400).json({ message: "Display name can only contain letters, numbers, and spaces" });
+                }
+            }
         }
         
-        // Validate email format - more comprehensive regex
-        const trimmedEmail = email.trim().toLowerCase();
-        const emailRegex = /^[a-zA-Z0-9._+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-        if (!emailRegex.test(trimmedEmail)) {
-            return res.status(400).json({ message: "Invalid email format" });
+        // Handle email
+        if (email !== undefined) {
+            // Get current user email to check if it changed
+            const currentUser = auth.db.prepare('SELECT email FROM users WHERE id = ?').get(user.id);
+            
+            if (!email || !email.trim()) {
+                // If blank, generate unique UUID email
+                const uuid = crypto.randomUUID();
+                trimmedEmail = `${uuid}@auth.austinsdk.me`;
+                emailChanged = true;
+            } else {
+                trimmedEmail = email.trim().toLowerCase();
+                
+                // Validate email format
+                const emailRegex = /^[a-zA-Z0-9._+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+                if (!emailRegex.test(trimmedEmail)) {
+                    return res.status(400).json({ message: "Invalid email format" });
+                }
+                
+                if (trimmedEmail.length > 254) {
+                    return res.status(400).json({ message: "Email address is too long" });
+                }
+                
+                // Check for invalid characters or patterns
+                if (trimmedEmail.startsWith('.') || trimmedEmail.endsWith('.') || 
+                    trimmedEmail.includes('..') || trimmedEmail.split('@')[0].length > 64) {
+                    return res.status(400).json({ message: "Invalid email format" });
+                }
+                
+                // Check if email is already in use by another user
+                const existingEmail = auth.db.prepare('SELECT id FROM users WHERE LOWER(email) = ? AND id != ?').get(trimmedEmail, user.id);
+                if (existingEmail) {
+                    return res.status(400).json({ message: "Email is already in use by another account" });
+                }
+                
+                // Check if email actually changed
+                if (currentUser.email !== trimmedEmail) {
+                    emailChanged = true;
+                }
+            }
         }
         
-        // Additional email validation checks
-        if (trimmedEmail.length > 254) {
-            return res.status(400).json({ message: "Email address is too long" });
+        // Build dynamic update query based on what's provided
+        const updates = [];
+        const params = [];
+        
+        if (trimmedEmail !== null) {
+            updates.push('email = ?');
+            params.push(trimmedEmail);
+            
+            if (emailChanged) {
+                // Mark email as unverified when changed
+                updates.push('email_verified = 0');
+            }
         }
         
-        // Check for invalid characters or patterns
-        if (trimmedEmail.startsWith('.') || trimmedEmail.endsWith('.') || 
-            trimmedEmail.includes('..') || trimmedEmail.split('@')[0].length > 64) {
-            return res.status(400).json({ message: "Invalid email format" });
+        if (trimmedDisplayName !== null) {
+            updates.push('display_name = ?');
+            params.push(trimmedDisplayName);
         }
         
-        // Check if email is already taken by another user
-        const existingUser = auth.db.prepare("SELECT id FROM users WHERE LOWER(email) = ? AND id != ?").get(trimmedEmail, user.id);
-        if (existingUser) {
-            return res.status(400).json({ message: "Email already in use by another account" });
+        if (updates.length > 0) {
+            params.push(user.id);
+            const sql = `UPDATE users SET ${updates.join(', ')} WHERE id = ?`;
+            auth.db.prepare(sql).run(...params);
+            
+            // Send verification email if email was changed and it's a real email (not UUID)
+            if (emailChanged && trimmedEmail && !trimmedEmail.endsWith('@auth.austinsdk.me')) {
+                try {
+                    await emailService.sendVerificationEmail(trimmedEmail, {
+                        subject: 'Verify Your Email Address',
+                        purpose: 'verify_email',
+                        userId: user.id,
+                        username: user.username,
+                        ipAddress: req.ip || req.connection.remoteAddress,
+                        meta: {
+                            action: 'email_change',
+                            timestamp: new Date().toISOString()
+                        },
+                        useTemplate: true
+                    });
+                    
+                    console.log(`Verification email sent to ${trimmedEmail} for user ${user.id}`);
+                } catch (emailError) {
+                    console.error('Error sending verification email:', emailError);
+                    // Don't fail the update if email sending fails
+                }
+            } else if (emailChanged && trimmedEmail && trimmedEmail.endsWith('@auth.austinsdk.me')) {
+                // Auto-verify UUID emails
+                auth.db.prepare('UPDATE users SET email_verified = 1 WHERE id = ?').run(user.id);
+                console.log(`Auto-verified UUID email for user ${user.id}`);
+            }
+            
+            // Force cache refresh by clearing and reloading the user from database
+            // This ensures the next request will fetch the updated user data
+            auth.refreshUserCache(user.id);
         }
         
-        // Update user information
-        auth.db.prepare("UPDATE users SET email = ?, display_name = ? WHERE id = ?")
-            .run(trimmedEmail, trimmedDisplayName, user.id);
-        
-        // Force cache refresh by clearing and reloading the user from database
-        // This ensures the next request will fetch the updated user data
-        auth.refreshUserCache(user.id);
-        
-        res.json({ message: "Personal information updated successfully" });
+        res.json({ 
+            message: "Personal information updated successfully",
+            emailChanged: emailChanged,
+            requiresVerification: emailChanged
+        });
         
     } catch (error) {
         console.error('Error updating user info:', error);
         res.status(500).json({ message: "Error updating personal information" });
+    }
+});
+
+// Verify email with code
+app.post("/user/verify-email", async (req, res) => {
+    let user = req.user;
+    if (!user) {
+        return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    try {
+        const { code } = req.body;
+        const Email = require('./libs/email');
+        const emailService = new Email();
+        
+        if (!code || !code.trim()) {
+            return res.status(400).json({ message: "Verification code is required" });
+        }
+        
+        // Verify the email with the code
+        const result = emailService.verifyUserEmail(user.id, code.trim());
+        
+        if (result.success) {
+            // Refresh user cache
+            auth.refreshUserCache(user.id);
+            return res.json({ message: "Email verified successfully" });
+        } else {
+            return res.status(400).json({ message: result.message });
+        }
+        
+    } catch (error) {
+        console.error('Error verifying email:', error);
+        res.status(500).json({ message: "Error verifying email" });
+    }
+});
+
+// Resend verification email
+app.post("/user/resend-verification", async (req, res) => {
+    let user = req.user;
+    if (!user) {
+        return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    try {
+        const Email = require('./libs/email');
+        const emailService = new Email();
+        
+        // Get user's current email
+        const currentUser = auth.db.prepare('SELECT email, email_verified FROM users WHERE id = ?').get(user.id);
+        
+        if (!currentUser || !currentUser.email) {
+            return res.status(400).json({ message: "No email address found" });
+        }
+        
+        if (currentUser.email_verified) {
+            return res.status(400).json({ message: "Email is already verified" });
+        }
+        
+        // Send verification email
+        await emailService.sendVerificationEmail(currentUser.email, {
+            subject: 'Verify Your Email Address',
+            purpose: 'verify_email',
+            userId: user.id,
+            username: user.username,
+            ipAddress: req.ip || req.connection.remoteAddress,
+            meta: {
+                action: 'resend_verification',
+                timestamp: new Date().toISOString()
+            },
+            useTemplate: true
+        });
+        
+        res.json({ message: "Verification email sent successfully" });
+        
+    } catch (error) {
+        console.error('Error resending verification email:', error);
+        res.status(500).json({ message: "Error sending verification email" });
     }
 });
 

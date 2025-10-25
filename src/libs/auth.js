@@ -84,6 +84,7 @@ class mhm{
         this.router.post("/register", limiter, async (req,res)=>{
             try {
                 const { username, password, email, display_name } = req.body;
+                const crypto = require('crypto');
 
                 console.log(req.body)
                 
@@ -98,9 +99,12 @@ class mhm{
                     });
                 }
 
-                // Validate email if provided
+                // Validate email if provided, or generate UUID email
                 let trimmedEmail = null;
+                let emailVerified = 0; // Default to unverified
+                
                 if (email && email.trim()) {
+                    // Real email provided - mark as unverified and will send verification email
                     trimmedEmail = email.trim().toLowerCase();
                     const emailRegex = /^[a-zA-Z0-9._+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
                     if (!emailRegex.test(trimmedEmail)) {
@@ -121,6 +125,12 @@ class mhm{
                     if (existingEmail) {
                         return res.status(400).json({ message: "Email already in use" });
                     }
+                    emailVerified = 0; // Requires verification
+                } else {
+                    // No email provided - generate UUID email and mark as verified
+                    const uuid = crypto.randomUUID();
+                    trimmedEmail = `${uuid}@auth.austinsdk.me`;
+                    emailVerified = 1; // Auto-verify UUID emails
                 }
 
                 // Validate display_name if provided
@@ -150,7 +160,36 @@ class mhm{
                     throw new Error("Unallowed username");
                 }
                 
-                await this.createAccount(lowercaseUsername, validatedDisplayName, trimmedEmail, password);
+                await this.createAccount(lowercaseUsername, validatedDisplayName, trimmedEmail, password, "[]", emailVerified);
+                
+                // Send verification email if a real email was provided
+                if (emailVerified === 0 && trimmedEmail && !trimmedEmail.endsWith('@auth.austinsdk.me')) {
+                    try {
+                        const Email = require('./email');
+                        const emailService = new Email();
+                        
+                        // Get the newly created user's ID
+                        const newUser = this.db.prepare("SELECT id FROM users WHERE username = ?").get(lowercaseUsername);
+                        
+                        if (newUser) {
+                            await emailService.sendVerificationEmail(trimmedEmail, {
+                                subject: 'Verify Your Email Address',
+                                purpose: 'verify_email',
+                                userId: newUser.id,
+                                username: lowercaseUsername,
+                                meta: {
+                                    action: 'registration',
+                                    timestamp: new Date().toISOString()
+                                },
+                                useTemplate: true
+                            });
+                            console.log(`Verification email sent to ${trimmedEmail} for new user ${newUser.id}`);
+                        }
+                    } catch (emailError) {
+                        console.error('Error sending verification email during registration:', emailError);
+                        // Don't fail registration if email sending fails
+                    }
+                }
                 
                 return res.status(201).json({
                     message: "Created user account successfully!"
@@ -199,7 +238,7 @@ class mhm{
     getProjectFromId(id){
         return this.db.prepare("SELECT * FROM projects WHERE id = ?").get(id)
     }
-    createAccount = async (username, display_name, email, password, perms="[]") => {
+    createAccount = async (username, display_name, email, password, perms="[]", email_verified=0) => {
         if (!username || !password || !perms){
             console.error(`error auth.js... username ${!!username} display_name ${!!display_name} email ${!!email} password ${!!password} perms ${!!perms}`)
             return process.exit(1)
@@ -218,7 +257,7 @@ class mhm{
 
             // hash password and insert new user
             const hashedPassword = await hash(password);
-            return this.db.prepare("INSERT INTO users (username, password, email, permissions, display_name) VALUES (?, ?, ?, ?, ?)").run(username, hashedPassword, email || null, perms, display_name);
+            return this.db.prepare("INSERT INTO users (username, password, email, permissions, display_name, email_verified) VALUES (?, ?, ?, ?, ?, ?)").run(username, hashedPassword, email || null, perms, display_name, email_verified);
         } catch (error) {
             if (error.message === "Account already exists") {
                 throw error;
