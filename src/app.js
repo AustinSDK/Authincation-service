@@ -938,6 +938,8 @@ app.post("/api/v1/oauth/validate_token",(req,res)=>{
                     valid: true,
                     user_id: user.id,
                     username: user.username,
+                    email: user.email,
+                    email_verified: user.email_verified === 1,
                     client_id: validation.token.client_id,
                     scope: validation.token.scope,
                     expires_at: validation.token.expires_at
