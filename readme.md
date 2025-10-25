@@ -32,11 +32,3 @@ This project is built with the following open-source packages:
 | [mailgun.js](https://www.npmjs.com/package/mailgun.js) | ^12.1.1 |
 | [sqlite-auto-migrator](https://www.npmjs.com/package/sqlite-auto-migrator) | ^1.3.1 |
 | [sqlite3](https://www.npmjs.com/package/sqlite3) | ^5.1.7 |
-
----
-
-*This credits section is automatically generated. Last updated: 2025-10-25*
-## Dependencies
-
-#### Custom Dependencies
-[Disposable email domains](https://github.com/disposable-email-domains/disposable-email-domains)
