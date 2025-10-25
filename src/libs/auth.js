@@ -98,6 +98,51 @@ class mhm{
                     });
                 }
 
+                // Validate email if provided
+                let trimmedEmail = null;
+                if (email && email.trim()) {
+                    trimmedEmail = email.trim().toLowerCase();
+                    const emailRegex = /^[a-zA-Z0-9._+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+                    if (!emailRegex.test(trimmedEmail)) {
+                        return res.status(400).json({ message: "Invalid email format" });
+                    }
+                    
+                    if (trimmedEmail.length > 254) {
+                        return res.status(400).json({ message: "Email address is too long" });
+                    }
+                    
+                    if (trimmedEmail.startsWith('.') || trimmedEmail.endsWith('.') || 
+                        trimmedEmail.includes('..') || trimmedEmail.split('@')[0].length > 64) {
+                        return res.status(400).json({ message: "Invalid email format" });
+                    }
+                    
+                    // Check if email already exists
+                    const existingEmail = this.db.prepare("SELECT id FROM users WHERE LOWER(email) = ?").get(trimmedEmail);
+                    if (existingEmail) {
+                        return res.status(400).json({ message: "Email already in use" });
+                    }
+                }
+
+                // Validate display_name if provided
+                let validatedDisplayName = display_name;
+                if (display_name && display_name.trim()) {
+                    const trimmedDisplayName = display_name.trim();
+                    
+                    if (trimmedDisplayName.length < 2) {
+                        return res.status(400).json({ message: "Display name must be at least 2 characters long" });
+                    }
+                    if (trimmedDisplayName.length > 50) {
+                        return res.status(400).json({ message: "Display name must be at most 50 characters long" });
+                    }
+                    
+                    const displayNameRegex = /^[a-zA-Z0-9 ]+$/;
+                    if (!displayNameRegex.test(trimmedDisplayName)) {
+                        return res.status(400).json({ message: "Display name can only contain letters, numbers, and spaces" });
+                    }
+                    
+                    validatedDisplayName = trimmedDisplayName;
+                }
+
                 // Then check blocked usernames
                 let blocked = ['admin','root','webmaster','test','null'];
                 const lowercaseUsername = String(username).toLowerCase();
@@ -105,7 +150,7 @@ class mhm{
                     throw new Error("Unallowed username");
                 }
                 
-                await this.createAccount(lowercaseUsername, display_name, email, password);
+                await this.createAccount(lowercaseUsername, validatedDisplayName, trimmedEmail, password);
                 
                 return res.status(201).json({
                     message: "Created user account successfully!"
@@ -155,7 +200,7 @@ class mhm{
         return this.db.prepare("SELECT * FROM projects WHERE id = ?").get(id)
     }
     createAccount = async (username, display_name, email, password, perms="[]") => {
-        if (!username || !email || !password || !perms){
+        if (!username || !password || !perms){
             console.error(`error auth.js... username ${!!username} display_name ${!!display_name} email ${!!email} password ${!!password} perms ${!!perms}`)
             return process.exit(1)
         }
@@ -173,7 +218,7 @@ class mhm{
 
             // hash password and insert new user
             const hashedPassword = await hash(password);
-            return this.db.prepare("INSERT INTO users (username, password, email, permissions, display_name) VALUES (?, ?, ?, ?, ?)").run(username, hashedPassword, email, perms, display_name);
+            return this.db.prepare("INSERT INTO users (username, password, email, permissions, display_name) VALUES (?, ?, ?, ?, ?)").run(username, hashedPassword, email || null, perms, display_name);
         } catch (error) {
             if (error.message === "Account already exists") {
                 throw error;

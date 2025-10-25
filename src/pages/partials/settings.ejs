@@ -8,12 +8,14 @@
         <form id="user_info" class="form-default">
             <div class="field">
                 <label for="email">Email</label>
-                <input name="email" type="email" id="email" placeholder="Email..." value="<%= _user.email %>" required />
+                <input name="email" type="email" id="email" placeholder="Email..." value="<%= _user.email %>" required maxlength="254" />
+                <small class="muted">Maximum 254 characters</small>
             </div>
 
             <div class="field">
                 <label for="display_name">Display Name</label>
-                <input name="display_name" type="text" id="display_name" placeholder="Display Name..." value="<%= _user.display_name %>" required />
+                <input name="display_name" type="text" id="display_name" placeholder="Display Name..." value="<%= _user.display_name %>" required minlength="2" maxlength="50" pattern="[a-zA-Z0-9 ]+" title="Only letters, numbers, and spaces allowed" />
+                <small class="muted">2-50 characters (letters, numbers, and spaces only)</small>
             </div>
 
             <div class="admin-actions">

@@ -396,21 +396,50 @@ app.post("/user/update-info", async (req, res) => {
         // Users can only update their own personal information
         // Not even admins can change someone else's personal data
         
-        // Validate email format
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(email)) {
+        // Validate display name
+        const trimmedDisplayName = display_name.trim();
+        if (trimmedDisplayName.length === 0) {
+            return res.status(400).json({ message: "Display name cannot be empty" });
+        }
+        if (trimmedDisplayName.length < 2) {
+            return res.status(400).json({ message: "Display name must be at least 2 characters long" });
+        }
+        if (trimmedDisplayName.length > 50) {
+            return res.status(400).json({ message: "Display name must be at most 50 characters long" });
+        }
+        // Only allow letters, numbers, and spaces (no special characters)
+        const displayNameRegex = /^[a-zA-Z0-9 ]+$/;
+        if (!displayNameRegex.test(trimmedDisplayName)) {
+            return res.status(400).json({ message: "Display name can only contain letters, numbers, and spaces" });
+        }
+        
+        // Validate email format - more comprehensive regex
+        const trimmedEmail = email.trim().toLowerCase();
+        const emailRegex = /^[a-zA-Z0-9._+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+        if (!emailRegex.test(trimmedEmail)) {
+            return res.status(400).json({ message: "Invalid email format" });
+        }
+        
+        // Additional email validation checks
+        if (trimmedEmail.length > 254) {
+            return res.status(400).json({ message: "Email address is too long" });
+        }
+        
+        // Check for invalid characters or patterns
+        if (trimmedEmail.startsWith('.') || trimmedEmail.endsWith('.') || 
+            trimmedEmail.includes('..') || trimmedEmail.split('@')[0].length > 64) {
             return res.status(400).json({ message: "Invalid email format" });
         }
         
         // Check if email is already taken by another user
-        const existingUser = auth.db.prepare("SELECT id FROM users WHERE email = ? AND id != ?").get(email, user.id);
+        const existingUser = auth.db.prepare("SELECT id FROM users WHERE LOWER(email) = ? AND id != ?").get(trimmedEmail, user.id);
         if (existingUser) {
             return res.status(400).json({ message: "Email already in use by another account" });
         }
         
         // Update user information
         auth.db.prepare("UPDATE users SET email = ?, display_name = ? WHERE id = ?")
-            .run(email, display_name, user.id);
+            .run(trimmedEmail, trimmedDisplayName, user.id);
         
         // Force cache refresh by clearing and reloading the user from database
         // This ensures the next request will fetch the updated user data

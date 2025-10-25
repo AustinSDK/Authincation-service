@@ -9,6 +9,20 @@
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css" />
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
     <script>
+        // Toast notification utility function - defined early for use in logout
+        function toToast(msg, isSuccess = false) {
+            Toastify({ 
+                text: msg, 
+                duration: 3000, 
+                gravity: 'top', 
+                position: 'right', 
+                style: { 
+                    background: isSuccess ? 'rgb(56,142,60)' : 'rgb(212,56,56)', 
+                    color: '#fff' 
+                } 
+            }).showToast();
+        }
+        
         logout = async (id) => {
             try {
                 const response = await fetch('/logout', {
@@ -24,11 +38,11 @@
                 if (response.ok) {
                     window.location.reload();
                 } else {
-                    alert('Error: ' + result.message);
+                    toToast('Error: ' + result.message);
                 }
             } catch (error) {
                 console.error('Logout error:', error);
-                alert('An error occurred while logging out');
+                toToast('An error occurred while logging out');
             }
         }
     </script>
@@ -44,7 +58,7 @@
             <% } %>
         <% } %>
         <header>
-            <h1><%= _user.display_name %><% if (_user.display_name !== _user.username) {%>&lt;asd;&gt;<% } %></h1>
+            <h1><%= _user.display_name %><% if (_user.display_name !== _user.username) {%>&lt;<%= _user.username %>&gt;<% } %></h1>
             <p style="margin-top:.25rem;" class="muted">A super cool user account, lol, uh, mhm</p>
         </header>
         <% if (user.admin && "admin" in query) { %>
@@ -70,6 +84,7 @@
          *  User Actions
          *  
          */
+        
         let _del = false;
         let _resetpw = false;
         async function deleteAccount(){
@@ -96,14 +111,16 @@
                 let _data = await _fetch.json();
                 
                 if (_fetch.ok) {
-                    alert("Account deleted successfully");
-                    window.location.href = "/users"; // Redirect to users list
+                    toToast("Account deleted successfully", true);
+                    setTimeout(() => {
+                        window.location.href = "/users"; // Redirect to users list
+                    }, 1000);
                 } else {
-                    alert("Error: " + _data.message);
+                    toToast("Error: " + _data.message);
                 }
             } catch (error) {
                 console.error('Delete account error:', error);
-                alert("An error occurred while deleting the account");
+                toToast("An error occurred while deleting the account");
             } finally {
                 _del = false;
             }
@@ -134,13 +151,13 @@
                 let _data = await _fetch.json();
                 
                 if (_fetch.ok) {
-                    alert("Password reset successfully");
+                    toToast("Password reset successfully", true);
                 } else {
-                    alert("Error: " + _data.message);
+                    toToast("Error: " + _data.message);
                 }
             } catch (error) {
                 console.error('Reset password error:', error);
-                alert("An error occurred while resetting the password");
+                toToast("An error occurred while resetting the password");
             } finally {
                 _resetpw = false;
             }
@@ -151,20 +168,6 @@
          * User Permissions Management JavaScript
          * Handles permission management for current user
          */
-
-        // Toast notification utility function
-        function toToast(msg) {
-            Toastify({ 
-                text: msg, 
-                duration: 3000, 
-                gravity: 'top', 
-                position: 'right', 
-                style: { 
-                    background: 'rgb(212,56,56)', 
-                    color: '#fff' 
-                } 
-            }).showToast();
-        }
 
         // DOM elements for permissions management
         const userPermInput = document.getElementById('userPermInput');
@@ -381,13 +384,42 @@
                 
                 // Validate inputs
                 if (!email || !displayName) {
-                    alert('Email and Display Name are required');
+                    toToast('Email and Display Name are required');
+                    return;
+                }
+                
+                // Validate display name length
+                if (displayName.length < 2) {
+                    toToast('Display name must be at least 2 characters long');
+                    return;
+                }
+                if (displayName.length > 50) {
+                    toToast('Display name must be at most 50 characters long');
+                    return;
+                }
+                
+                // Validate display name characters (only letters, numbers, and spaces)
+                const displayNameRegex = /^[a-zA-Z0-9 ]+$/;
+                if (!displayNameRegex.test(displayName)) {
+                    toToast('Display name can only contain letters, numbers, and spaces');
+                    return;
+                }
+                
+                // Validate email format
+                const emailRegex = /^[a-zA-Z0-9._+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+                if (!emailRegex.test(email)) {
+                    toToast('Please enter a valid email address');
+                    return;
+                }
+                
+                if (email.length > 254) {
+                    toToast('Email address is too long (max 254 characters)');
                     return;
                 }
                 
                 // Check if anything changed
-                if (email === originalEmail && displayName === originalDisplayName) {
-                    alert('No changes detected');
+                if (email.toLowerCase() === originalEmail.toLowerCase() && displayName === originalDisplayName) {
+                    toToast('No changes detected');
                     return;
                 }
                 
@@ -410,14 +442,14 @@
                     const result = await response.json();
                     
                     if (response.ok) {
-                        alert('Personal information updated successfully');
-                        window.location.reload();
+                        toToast('Personal information updated successfully', true);
+                        setTimeout(() => window.location.reload(), 1000);
                     } else {
-                        alert('Error: ' + result.message);
+                        toToast('Error: ' + result.message);
                     }
                 } catch (error) {
                     console.error('Update error:', error);
-                    alert('An error occurred while updating personal information');
+                    toToast('An error occurred while updating personal information');
                 } finally {
                     saveBtn.disabled = false;
                     saveBtn.textContent = 'Save Changes';
@@ -430,6 +462,7 @@
                 resetBtn.addEventListener('click', () => {
                     document.getElementById('email').value = originalEmail;
                     document.getElementById('display_name').value = originalDisplayName;
+                    toToast('Form reset to original values', true);
                 });
             }
         }
