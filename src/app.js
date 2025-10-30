@@ -1,9 +1,9 @@
 require("dotenv").config({ path: require("path").join(__dirname, "..", ".env") });
 
-const db = require("./libs/db")
+const db = require("./libs/db");
 
 const path = require("path");
-const fs = require("fs")
+const fs = require("fs");
 
 const express = require("express");
 const app = express();
@@ -12,7 +12,6 @@ const auth = require("./libs/auth")(express,db);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
-
 
 // Add cache-control headers to prevent caching issues
 app.use((req, res, next) => {
