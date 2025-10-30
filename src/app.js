@@ -649,10 +649,38 @@ app.post("/user/toggle-totp", async (req, res) => {
             return res.status(400).json({ message: "Active state must be a boolean" });
         }
         
-        const totpRecord = db.totp.getUserTotpSecret(user.id);
+        let totpRecord = db.totp.getUserTotpSecret(user.id);
         
+        // If trying to enable and no secret exists, generate one automatically
         if (!totpRecord && active) {
-            return res.status(400).json({ message: "No TOTP secret found. Please generate one first." });
+            const totp = require('./libs/totp');
+            const secret = totp.generateSecret();
+            const saved = db.totp.setUserTotpSecret(user.id, secret, false);
+            
+            if (!saved) {
+                return res.status(500).json({ message: "Failed to generate TOTP secret" });
+            }
+            
+            // Reload the record
+            totpRecord = db.totp.getUserTotpSecret(user.id);
+            
+            // Generate QR code to return
+            const label = user.email || user.username;
+            const issuer = process.env.APP_NAME || 'Authentication Service';
+            const qrDataUrl = await totp.getQRCodeDataURL(secret, label, issuer, 300);
+            const otpauthUrl = totp.getOtpauthURL(secret, label, issuer);
+            
+            // Now activate it
+            db.totp.activateTotpForUser(user.id);
+            
+            return res.json({
+                message: 'TOTP enabled successfully',
+                active: true,
+                qrCode: qrDataUrl,
+                otpauthUrl: otpauthUrl,
+                secret: secret,
+                generated: true
+            });
         }
         
         // Update active state

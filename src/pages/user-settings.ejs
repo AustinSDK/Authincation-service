@@ -749,57 +749,9 @@
             
             if (!toggleCheckbox || !statusSpan) return;
             
-            // If trying to enable, first check if secret exists, if not generate one
-            if (active) {
-                try {
-                    const statusResponse = await fetch('/user/totp-status');
-                    const statusResult = await statusResponse.json();
-                    
-                    if (!statusResult.hasTotp) {
-                        // No secret exists, generate one first
-                        toggleCheckbox.disabled = true;
-                        statusSpan.textContent = 'Generating secret...';
-                        
-                        const generateResponse = await fetch('/user/generate-totp', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json'
-                            }
-                        });
-                        
-                        const generateResult = await generateResponse.json();
-                        
-                        if (generateResponse.ok) {
-                            // Display the QR code
-                            actionsDiv.style.display = 'block';
-                            qrImage.src = generateResult.qrCode;
-                            qrImage.style.display = 'block';
-                            qrImage.alt = 'TOTP QR Code - Scan with Google Authenticator';
-                            
-                            toToast('TOTP secret generated! Scan the QR code, then toggle will enable automatically.', true);
-                            
-                            // Now proceed to enable
-                        } else {
-                            toggleCheckbox.checked = false;
-                            statusSpan.textContent = 'Disabled';
-                            toggleCheckbox.disabled = false;
-                            toToast('Error generating secret: ' + generateResult.message);
-                            return;
-                        }
-                    }
-                } catch (error) {
-                    console.error('Error checking TOTP status:', error);
-                    toggleCheckbox.checked = false;
-                    toggleCheckbox.disabled = false;
-                    statusSpan.textContent = 'Error';
-                    toToast('An error occurred');
-                    return;
-                }
-            }
-            
             // Disable toggle while processing
             toggleCheckbox.disabled = true;
-            statusSpan.textContent = 'Updating...';
+            statusSpan.textContent = active ? 'Enabling...' : 'Disabling...';
             
             try {
                 const response = await fetch('/user/toggle-totp', {
@@ -818,10 +770,20 @@
                     
                     if (active) {
                         actionsDiv.style.display = 'block';
-                        toToast('TOTP authentication enabled! Make sure to test it before logging out.', true);
                         
-                        // If enabling, reload to get QR code
-                        loadTOTPStatus();
+                        // If backend generated a new secret, display the QR code
+                        if (result.generated && result.qrCode) {
+                            qrImage.src = result.qrCode;
+                            qrImage.style.display = 'block';
+                            qrImage.alt = 'TOTP QR Code - Scan with Google Authenticator';
+                            toToast('TOTP enabled! Scan the QR code with Google Authenticator before logging out.', true);
+                            console.log('TOTP Secret:', result.secret);
+                            console.log('OTPAuth URL:', result.otpauthUrl);
+                        } else {
+                            toToast('TOTP authentication enabled! Make sure to test it before logging out.', true);
+                            // Reload status to get QR code if it exists
+                            loadTOTPStatus();
+                        }
                     } else {
                         if (qrImage) {
                             qrImage.style.display = 'none';
