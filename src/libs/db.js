@@ -87,6 +87,7 @@ CREATE TABLE IF NOT EXISTS totp (
     user_id INTEGER UNIQUE NOT NULL,
     secret TEXT NOT NULL,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    active INTEGER DEFAULT 0,
     FOREIGN KEY (user_id) REFERENCES users (id)
 );
 
@@ -290,5 +291,96 @@ migrate();
     }
 })();
 
+// TOTP helper functions
+const totpHelpers = {
+    /**
+     * Get user's TOTP secret from database
+     * @param {number} userId - User ID
+     * @returns {object|null} TOTP record or null if not found
+     */
+    getUserTotpSecret(userId) {
+        try {
+            return db.prepare('SELECT * FROM totp WHERE user_id = ?').get(userId);
+        } catch (error) {
+            console.error('Error getting user TOTP secret:', error);
+            return null;
+        }
+    },
+
+    /**
+     * Set or update user's TOTP secret
+     * @param {number} userId - User ID
+     * @param {string} secret - Base32 encoded secret
+     * @param {boolean} active - Whether TOTP is active (default: false)
+     * @returns {boolean} Success status
+     */
+    setUserTotpSecret(userId, secret, active = false) {
+        try {
+            const existing = this.getUserTotpSecret(userId);
+            
+            if (existing) {
+                // Update existing record
+                db.prepare('UPDATE totp SET secret = ?, active = ?, created_at = CURRENT_TIMESTAMP WHERE user_id = ?')
+                    .run(secret, active ? 1 : 0, userId);
+            } else {
+                // Insert new record
+                db.prepare('INSERT INTO totp (user_id, secret, active) VALUES (?, ?, ?)')
+                    .run(userId, secret, active ? 1 : 0);
+            }
+            return true;
+        } catch (error) {
+            console.error('Error setting user TOTP secret:', error);
+            return false;
+        }
+    },
+
+    /**
+     * Activate TOTP for a user
+     * @param {number} userId - User ID
+     * @returns {boolean} Success status
+     */
+    activateTotpForUser(userId) {
+        try {
+            db.prepare('UPDATE totp SET active = 1 WHERE user_id = ?').run(userId);
+            return true;
+        } catch (error) {
+            console.error('Error activating TOTP for user:', error);
+            return false;
+        }
+    },
+
+    /**
+     * Deactivate TOTP for a user
+     * @param {number} userId - User ID
+     * @returns {boolean} Success status
+     */
+    deactivateTotpForUser(userId) {
+        try {
+            db.prepare('UPDATE totp SET active = 0 WHERE user_id = ?').run(userId);
+            return true;
+        } catch (error) {
+            console.error('Error deactivating TOTP for user:', error);
+            return false;
+        }
+    },
+
+    /**
+     * Delete user's TOTP secret
+     * @param {number} userId - User ID
+     * @returns {boolean} Success status
+     */
+    deleteTotpForUser(userId) {
+        try {
+            db.prepare('DELETE FROM totp WHERE user_id = ?').run(userId);
+            return true;
+        } catch (error) {
+            console.error('Error deleting TOTP for user:', error);
+            return false;
+        }
+    }
+};
+
+// Attach helpers to db object
+db.totp = totpHelpers;
 
 module.exports = db

@@ -68,5 +68,23 @@
                 <button type="button" id="resetUserInfo" class="btn btn-ghost">Reset</button>
             </div>
         </form>
+
+        <h3 style="padding-top: 20px;">TOTP (Time-Based One-Time Password)</h3>
+        <div class="form-default">
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
+                <label style="margin: 0; font-weight: 600;">Enable TOTP Authentication:</label>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="totpToggle" onchange="toggleTOTP(this.checked)">
+                    <span class="toggle-slider"></span>
+                </label>
+                <span id="totpStatus" style="color: var(--muted); font-size: 0.9em;">Loading...</span>
+            </div>
+            
+            <div id="totpActions" style="display: none;">
+                <button type="button" id="generatetotp" class="btn btn-accent" onclick="generateTOTP()">Generate new TOTP Secret</button>
+                <img id="totpQrCode" src="" alt="" style="image-rendering: pixelated; text-align: center; padding-top: 15px; width: 300px; display: none; margin: 0 auto;"> <!-- QR code will be displayed here after generation -->
+                <p style="color: var(--muted); font-size: 0.9em; margin-top: 10px;">Scan the QR code with Google Authenticator or enter the secret manually.</p>
+            </div>
+        </div>
     <% } %>
 </div>

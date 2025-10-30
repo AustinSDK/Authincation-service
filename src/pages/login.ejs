@@ -70,6 +70,20 @@
                 <label for="t_password">Password</label>
                 <input type="password" name="password" id="t_password" autocomplete="current-password">
             </div>
+            <div class="field" id="totpField" style="display: none;">
+                <label for="t_totp">TOTP Code</label>
+                <input 
+                    type="text" 
+                    name="totpCode" 
+                    id="t_totp" 
+                    placeholder="000000"
+                    maxlength="6"
+                    pattern="[0-9]*"
+                    inputmode="numeric"
+                    autocomplete="off"
+                >
+                <small style="color: var(--muted, #888); font-size: 0.85em;">Enter the 6-digit code from your authenticator app</small>
+            </div>
             <input type="submit" value="Login" class="btn btn-accent" disabled>
             <div class="alt-link"><a href="/register">Need an account? Sign up</a></div>
         </form>
@@ -98,24 +112,45 @@ let form = document.getElementById("loginForm");
 
 let username = document.getElementById("t_username");
 let password = document.getElementById("t_password");
+let totpCode = document.getElementById("t_totp");
+let totpField = document.getElementById("totpField");
 
-let submit = document.querySelector("form input[type=\"submit\"]")
+let submit = document.querySelector("form input[type=\"submit\"]");
+let requiresTOTP = false;
 
 document.addEventListener("DOMContentLoaded",e=>{
     submit.disabled = false;
-})
+    
+    // Auto-format TOTP input to only allow numbers
+    if (totpCode) {
+        totpCode.addEventListener('input', (e) => {
+            e.target.value = e.target.value.replace(/\D/g, '');
+        });
+    }
+});
 
 form.addEventListener("submit",async e=>{
     e.preventDefault();
     submit.disabled = true;
+    
     try {
+        const requestBody = {
+            username: username.value,
+            password: password.value
+        };
+        
+        // Include TOTP code if field is visible and has value
+        if (requiresTOTP && totpCode && totpCode.value.trim()) {
+            requestBody.totpCode = totpCode.value.trim();
+        }
+        
         let _fetch = await fetch("/login",{
             headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json'
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
             },
             method: "POST",
-            body: JSON.stringify({username:username.value,password:password.value}),
+            body: JSON.stringify(requestBody),
             credentials: 'include' // This is important to accept cookies
         });
         
@@ -126,9 +161,27 @@ form.addEventListener("submit",async e=>{
             // Success - redirect to home page
             window.location.href = "/";
         } else {
-            // Show error message
-            toToast(response.message || "Login failed");
-            submit.disabled = false;
+            // Check if TOTP is required
+            if (response.requiresTOTP && !requiresTOTP) {
+                // Show TOTP field
+                requiresTOTP = true;
+                totpField.style.display = 'block';
+                toToast(response.message || "Please enter your TOTP code");
+                submit.disabled = false;
+                // Focus on TOTP input
+                if (totpCode) {
+                    totpCode.focus();
+                }
+            } else {
+                // Show error message
+                toToast(response.message || "Login failed");
+                submit.disabled = false;
+                // If TOTP was wrong, clear it
+                if (requiresTOTP && totpCode) {
+                    totpCode.value = '';
+                    totpCode.focus();
+                }
+            }
         }
     } catch (error) {
         toToast("An error occurred during login");

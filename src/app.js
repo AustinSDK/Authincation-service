@@ -595,6 +595,125 @@ app.post("/user/resend-verification", async (req, res) => {
     }
 });
 
+// Get TOTP status for current user
+app.get("/user/totp-status", async (req, res) => {
+    let user = req.user;
+    if (!user) {
+        return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    try {
+        const totpRecord = db.totp.getUserTotpSecret(user.id);
+        
+        if (!totpRecord) {
+            return res.json({
+                hasTotp: false,
+                active: false,
+                secret: null
+            });
+        }
+        
+        // If TOTP is active and exists, generate QR code
+        let qrCode = null;
+        if (totpRecord.active) {
+            const totp = require('./libs/totp');
+            const label = user.email || user.username;
+            const issuer = process.env.APP_NAME || 'Authentication Service';
+            qrCode = await totp.getQRCodeDataURL(totpRecord.secret, label, issuer, 300);
+        }
+        
+        res.json({
+            hasTotp: true,
+            active: !!totpRecord.active,
+            qrCode: qrCode,
+            secret: totpRecord.active ? totpRecord.secret : null
+        });
+        
+    } catch (error) {
+        console.error('Error getting TOTP status:', error);
+        res.status(500).json({ message: "Error getting TOTP status" });
+    }
+});
+
+// Toggle TOTP active state
+app.post("/user/toggle-totp", async (req, res) => {
+    let user = req.user;
+    if (!user) {
+        return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    try {
+        const { active } = req.body;
+        
+        if (typeof active !== 'boolean') {
+            return res.status(400).json({ message: "Active state must be a boolean" });
+        }
+        
+        const totpRecord = db.totp.getUserTotpSecret(user.id);
+        
+        if (!totpRecord && active) {
+            return res.status(400).json({ message: "No TOTP secret found. Please generate one first." });
+        }
+        
+        // Update active state
+        if (active) {
+            db.totp.activateTotpForUser(user.id);
+        } else {
+            db.totp.deactivateTotpForUser(user.id);
+        }
+        
+        res.json({
+            message: `TOTP ${active ? 'enabled' : 'disabled'} successfully`,
+            active: active
+        });
+        
+    } catch (error) {
+        console.error('Error toggling TOTP:', error);
+        res.status(500).json({ message: "Error toggling TOTP" });
+    }
+});
+
+// Generate new TOTP secret and QR code
+app.post("/user/generate-totp", async (req, res) => {
+    let user = req.user;
+    if (!user) {
+        return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    try {
+        const totp = require('./libs/totp');
+        
+        // Generate a new secret
+        const secret = totp.generateSecret();
+        
+        // Store it in the database (not active yet - user needs to verify it works first)
+        const saved = db.totp.setUserTotpSecret(user.id, secret, false);
+        
+        if (!saved) {
+            return res.status(500).json({ message: "Failed to save TOTP secret" });
+        }
+        
+        // Generate QR code data URI
+        const label = user.email || user.username;
+        const issuer = process.env.APP_NAME || 'Authentication Service';
+        const qrDataUrl = await totp.getQRCodeDataURL(secret, label, issuer, 300);
+        
+        // Also return the otpauth URL in case they want to manually enter it
+        const otpauthUrl = totp.getOtpauthURL(secret, label, issuer);
+        
+        res.json({
+            message: "TOTP secret generated successfully",
+            qrCode: qrDataUrl,
+            otpauthUrl: otpauthUrl,
+            secret: secret // Include secret so user can manually enter if needed
+        });
+        
+    } catch (error) {
+        console.error('Error generating TOTP:', error);
+        res.status(500).json({ message: "Error generating TOTP secret" });
+    }
+});
+
 // Delete user account (admin only)
 app.post("/deleteAccount", (req, res) => {
     let user = req.user;

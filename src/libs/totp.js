@@ -119,10 +119,36 @@ async function getQRCodeDataURL(secretBase32, label = '', issuer = '', size = 20
     }
 }
 
+/**
+ * Verify a TOTP code against a secret
+ * Allows a small window of tolerance for clock skew (previous/current/next period)
+ *
+ * @param {string} secretBase32 - base32 encoded secret
+ * @param {string} token - the TOTP code to verify (6 digits)
+ * @param {Object} opts - { digits=6, period=30, algorithm='SHA1', window=1 }
+ * @returns {boolean} true if token is valid
+ */
+function verifyTOTP(secretBase32, token, opts = {}){
+    const { digits = 6, period = 30, algorithm = 'SHA1', window = 1 } = opts;
+    const secret = OTPAuth.Secret.fromBase32(secretBase32);
+    const totp = new OTPAuth.TOTP({
+        secret,
+        algorithm,
+        digits,
+        period
+    });
+    
+    // OTPAuth.TOTP.validate returns the time step delta if valid, null otherwise
+    // window parameter allows checking tokens from adjacent time periods
+    const delta = totp.validate({ token, window });
+    return delta !== null;
+}
+
 module.exports = {
     generateSecret,
     generateTOTP,
     getOtpauthURL,
     getGoogleQRCodeURL,
-    getQRCodeDataURL
+    getQRCodeDataURL,
+    verifyTOTP
 };

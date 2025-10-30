@@ -53,7 +53,7 @@ class mhm{
         this.db = db;
         this.router = express.Router();
         this.router.post("/login", limiter, async (req, res) => {
-            const { username, password } = req.body;
+            const { username, password, totpCode } = req.body;
             if (!username || !password) {
                 return res.status(400).json({ message: "Username and password required" });
             }
@@ -64,6 +64,29 @@ class mhm{
             // Compare password with hash
             const validify = await compare(user.password, password);
             if (!validify) return res.status(400).json({ message: "Invalid credentials" });
+
+            // Check if user has TOTP enabled
+            const totpRecord = this.db.totp.getUserTotpSecret(user.id);
+            if (totpRecord && totpRecord.active) {
+                // TOTP is required for this user
+                if (!totpCode || !totpCode.trim()) {
+                    return res.status(400).json({ 
+                        message: "TOTP code required",
+                        requiresTOTP: true
+                    });
+                }
+                
+                // Verify TOTP code
+                const totp = require('./totp');
+                const isValid = totp.verifyTOTP(totpRecord.secret, totpCode.trim());
+                
+                if (!isValid) {
+                    return res.status(400).json({ 
+                        message: "Invalid TOTP code",
+                        requiresTOTP: true
+                    });
+                }
+            }
 
             users[String(user.id)] = user;
 

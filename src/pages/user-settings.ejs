@@ -696,8 +696,153 @@
                 }, 60000);
             }
         }
+
+        /**
+         * TOTP Functions
+         */
         
-        // Auto-setup verification input
+        // Load TOTP status on page load
+        async function loadTOTPStatus() {
+            const toggleCheckbox = document.getElementById('totpToggle');
+            const statusSpan = document.getElementById('totpStatus');
+            const actionsDiv = document.getElementById('totpActions');
+            const qrImage = document.getElementById('totpQrCode');
+            
+            if (!toggleCheckbox || !statusSpan) return;
+            
+            try {
+                const response = await fetch('/user/totp-status');
+                const result = await response.json();
+                
+                if (response.ok) {
+                    toggleCheckbox.checked = result.active;
+                    statusSpan.textContent = result.active ? 'Enabled' : 'Disabled';
+                    statusSpan.style.color = result.active ? 'var(--accent, green)' : 'var(--muted)';
+                    
+                    // Show actions section if TOTP exists or is active
+                    if (result.hasTotp) {
+                        actionsDiv.style.display = 'block';
+                        
+                        // If active and has QR code, display it
+                        if (result.active && result.qrCode && qrImage) {
+                            qrImage.src = result.qrCode;
+                            qrImage.style.display = 'block';
+                            qrImage.alt = 'TOTP QR Code - Scan with Google Authenticator';
+                        }
+                    }
+                } else {
+                    statusSpan.textContent = 'Error loading status';
+                    console.error('Error loading TOTP status:', result);
+                }
+            } catch (error) {
+                console.error('TOTP status error:', error);
+                statusSpan.textContent = 'Error';
+            }
+        }
+        
+        // Toggle TOTP on/off
+        async function toggleTOTP(active) {
+            const toggleCheckbox = document.getElementById('totpToggle');
+            const statusSpan = document.getElementById('totpStatus');
+            const actionsDiv = document.getElementById('totpActions');
+            const qrImage = document.getElementById('totpQrCode');
+            
+            if (!toggleCheckbox || !statusSpan) return;
+            
+            // Disable toggle while processing
+            toggleCheckbox.disabled = true;
+            statusSpan.textContent = 'Updating...';
+            
+            try {
+                const response = await fetch('/user/toggle-totp', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ active })
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    statusSpan.textContent = active ? 'Enabled' : 'Disabled';
+                    statusSpan.style.color = active ? 'var(--accent, green)' : 'var(--muted)';
+                    
+                    if (active) {
+                        actionsDiv.style.display = 'block';
+                        toToast('TOTP authentication enabled! Make sure to test it before logging out.', true);
+                        
+                        // If enabling, reload to get QR code
+                        loadTOTPStatus();
+                    } else {
+                        if (qrImage) {
+                            qrImage.style.display = 'none';
+                        }
+                        toToast('TOTP authentication disabled', true);
+                    }
+                } else {
+                    // Revert checkbox state on error
+                    toggleCheckbox.checked = !active;
+                    statusSpan.textContent = !active ? 'Enabled' : 'Disabled';
+                    toToast('Error: ' + result.message);
+                }
+            } catch (error) {
+                console.error('TOTP toggle error:', error);
+                toggleCheckbox.checked = !active;
+                statusSpan.textContent = !active ? 'Enabled' : 'Disabled';
+                toToast('An error occurred while toggling TOTP');
+            } finally {
+                toggleCheckbox.disabled = false;
+            }
+        }
+        
+        // Generate new TOTP secret
+        async function generateTOTP() {
+            const generateBtn = document.getElementById('generatetotp');
+            const qrImage = document.getElementById('totpQrCode');
+            
+            if (!generateBtn || !qrImage) return;
+            
+            generateBtn.disabled = true;
+            generateBtn.textContent = 'Generating...';
+            
+            try {
+                const response = await fetch('/user/generate-totp', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    // Display the QR code
+                    qrImage.src = result.qrCode;
+                    qrImage.style.display = 'block';
+                    qrImage.alt = 'TOTP QR Code - Scan with Google Authenticator';
+                    
+                    toToast('TOTP secret generated! Scan the QR code with Google Authenticator, then enable the toggle.', true);
+                    generateBtn.textContent = 'Generate New TOTP Secret';
+                    generateBtn.disabled = false;
+                    
+                    // Optional: Log the secret and URL for manual entry
+                    console.log('TOTP Secret:', result.secret);
+                    console.log('OTPAuth URL:', result.otpauthUrl);
+                } else {
+                    toToast('Error: ' + result.message);
+                    generateBtn.disabled = false;
+                    generateBtn.textContent = 'Generate new TOTP Secret';
+                }
+            } catch (error) {
+                console.error('TOTP generation error:', error);
+                toToast('An error occurred while generating TOTP secret');
+                generateBtn.disabled = false;
+                generateBtn.textContent = 'Generate new TOTP Secret';
+            }
+        }
+        
+        // Auto-setup verification input and load TOTP status
         document.addEventListener('DOMContentLoaded', () => {
             const verificationCodeInput = document.getElementById('verificationCode');
             
@@ -714,6 +859,9 @@
                     e.target.value = e.target.value.replace(/\D/g, '');
                 });
             }
+            
+            // Load TOTP status on page load
+            loadTOTPStatus();
         });
     </script>
 </body>
