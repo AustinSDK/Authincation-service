@@ -190,6 +190,7 @@
         <% } %>
         <%- include('partials/settings', { user: user }) %>
         <h2>logged in tokens</h2>
+        <div class="admin-section">
         <% tokens.forEach(token => { %>
             <p class="token">
                 <% if (token.token === user.token) { %>
@@ -200,6 +201,7 @@
                 - <a href="#" onclick="logout(<%= token.id %>)">Logout session</a>
             </p>
         <% }) %>
+        </div>
     </main>
 
     <% if (user.admin && "admin" in query) { %>
