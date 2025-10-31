@@ -1,6 +1,6 @@
 # Welcome to Authly
 
-Hello! Welcome to our authentication service project. This page provides comprehensive information about our mission, security practices, and future plans. If you'd like to contribute or suggest improvements, please visit our [GitHub repository](https://github.com/AustinSDK/Authentication-service/)!
+Hello! Welcome to our authentication service project. This page provides comprehensive information about our mission, security practices, and future plans. If you'd like to contribute or suggest improvements, please visit our [GitHub repository](https://github.com/AustinSDK/Authincation-service/)!
 
 ## Our Mission
 
