@@ -3,15 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <meta name="description" content="Learn about Authly - a secure, transparent authentication service built with privacy and security first.">
+    <title>About Authly - Secure Authentication Service</title>
     <link rel="stylesheet" href="/css/public.css">
     <link rel="stylesheet" href="/css/publix.css">
     <link rel="stylesheet" href="/css/footer.css">
 </head>
 <body>
-    <div class="content">
-        <%- content %>
+    <div class="page-wrapper">
+        <header class="page-header">
+            <h1>About Authly</h1>
+            <p class="subtitle">Secure Authentication You Can Trust</p>
+        </header>
+        <main class="content">
+            <%- content %>
+        </main>
+        <%- include("partials/footer.ejs") %>
     </div>
-    <%- include("partials/footer.ejs") %>
 </body>
 </html>

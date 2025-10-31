@@ -3,7 +3,7 @@ footer#actual-footer {
   width: 100vw;
   color: white;
   padding: 0;
-  margin: 0;
+  padding-top: 20px;
 }
 footer#actual-footer .seperator {
   table-layout: fixed;

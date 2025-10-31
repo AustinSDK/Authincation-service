@@ -1,5 +1,241 @@
+@charset "UTF-8";
+.page-wrapper {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.page-header {
+  background: linear-gradient(135deg, #a22b27 0%, #d63a35 100%);
+  color: #fff;
+  padding: 60px 40px 40px;
+  text-align: center;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+.page-header h1 {
+  margin: 0;
+  font-size: 3.5rem;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+}
+@media (max-width: 768px) {
+  .page-header h1 {
+    font-size: 2.5rem;
+  }
+}
+@media (max-width: 480px) {
+  .page-header h1 {
+    font-size: 2rem;
+  }
+}
+.page-header .subtitle {
+  margin: 15px 0 0;
+  font-size: 1.3rem;
+  opacity: 0.95;
+  font-weight: 300;
+}
+@media (max-width: 768px) {
+  .page-header .subtitle {
+    font-size: 1.1rem;
+  }
+}
+@media (max-width: 480px) {
+  .page-header .subtitle {
+    font-size: 1rem;
+  }
+}
+
 .content {
-  height: 100vh;
+  flex: 1;
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 60px 40px;
+  width: 100%;
+  box-sizing: border-box;
+}
+@media (max-width: 768px) {
+  .content {
+    padding: 40px 25px;
+  }
+}
+@media (max-width: 480px) {
+  .content {
+    padding: 30px 20px;
+  }
+}
+.content h3, .content h2, .content h1 {
+  line-height: 1.3;
+  font-weight: 600;
+}
+.content h3:first-child, .content h2:first-child, .content h1:first-child {
+  margin-top: 0;
+}
+.content h1 {
+  color: #a22b27;
+  font-size: 2.5rem;
+  margin-top: 2.5rem;
+  margin-bottom: 1rem;
+}
+@media (max-width: 768px) {
+  .content h1 {
+    font-size: 2rem;
+  }
+}
+.content h2 {
+  color: #a22b27;
+  font-size: 2rem;
+  margin-top: 2.5rem;
+  margin-bottom: 1rem;
+  border-bottom: 2px solid #f0f0f0;
+  padding-bottom: 0.5rem;
+}
+@media (max-width: 768px) {
+  .content h2 {
+    font-size: 1.75rem;
+  }
+}
+.content h3 {
+  color: #d63a35;
+  font-size: 1.5rem;
+  margin-top: 2rem;
+  margin-bottom: 0.8rem;
+}
+@media (max-width: 768px) {
+  .content h3 {
+    font-size: 1.3rem;
+  }
+}
+.content p {
+  line-height: 1.8;
+  margin-bottom: 1.2rem;
+  color: #333;
+  font-size: 1.05rem;
+}
+@media (max-width: 480px) {
+  .content p {
+    font-size: 1rem;
+  }
+}
+.content ul, .content ol {
+  line-height: 1.8;
+  margin-bottom: 1.5rem;
+  padding-left: 1.5rem;
+}
+.content ul li, .content ol li {
+  margin-bottom: 0.8rem;
+  color: rgb(76.5, 76.5, 76.5);
+}
+.content ul li strong, .content ol li strong {
+  color: #a22b27;
+  font-weight: 600;
+}
+.content ul li::marker, .content ol li::marker {
+  color: #a22b27;
+}
+.content ul ul, .content ul ol, .content ol ul, .content ol ol {
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+.content a {
+  color: #a22b27;
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: all 0.2s ease;
+  position: relative;
+}
+.content a:active {
+  color: rgb(120.8955223881, 32.0895522388, 29.1044776119);
+}
+.content a[href^=http]::after {
+  content: " ↗";
+  font-size: 0.8em;
+  opacity: 0.6;
+}
+.content code {
+  background: #f5f5f5;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-size: 0.9em;
+  color: #d63a35;
+  font-family: "Courier New", Courier, monospace;
+}
+.content pre {
+  background: #f5f5f5;
+  padding: 1rem;
+  border-radius: 6px;
+  overflow-x: auto;
+  border-left: 3px solid #a22b27;
+}
+.content pre code {
+  background: none;
+  padding: 0;
+}
+.content blockquote {
+  border-left: 4px solid #a22b27;
+  padding-left: 1.5rem;
+  margin: 1.5rem 0;
+  color: #666;
+  font-style: italic;
+  position: relative;
+}
+.content blockquote::before {
+  content: '"';
+  font-size: 3rem;
+  color: #a22b27;
+  opacity: 0.2;
+  position: absolute;
+  left: -0.5rem;
+  top: -1rem;
+}
+.content blockquote p:last-child {
+  margin-bottom: 0;
+}
+.content img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: 2rem auto;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease;
+}
+.content hr {
+  border: none;
+  border-top: 2px solid #e0e0e0;
+  margin: 3rem 0;
+  position: relative;
+}
+.content hr::after {
+  content: "✦";
+  position: absolute;
+  left: 50%;
+  top: -0.6rem;
+  transform: translateX(-50%);
+  background: #fff;
+  padding: 0 1rem;
+  color: #a22b27;
+}
+.content strong, .content b {
+  color: #a22b27;
+  font-weight: 600;
+}
+.content em, .content i {
+  color: #666;
+}
+.content table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 2rem 0;
+}
+.content table th, .content table td {
+  padding: 0.75rem;
+  text-align: left;
+  border-bottom: 1px solid #e0e0e0;
+}
+.content table th {
+  background: #f5f5f5;
+  color: #a22b27;
+  font-weight: 600;
 }
 
 /*# sourceMappingURL=public.css.map */

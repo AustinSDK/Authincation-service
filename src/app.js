@@ -102,6 +102,20 @@ app.get("/js/:path",(req,res,next)=>{
     res.sendFile(_path);
 });
 
+//public paths
+app.get("/public/:path",(req,res,next)=>{
+    // get path
+    const pub_path = path.join(__dirname,'public');
+    const _path = path.join(pub_path,req.params.path);
+
+    // check path to make sure its real
+    if (!_path.startsWith(pub_path)) return next();
+
+    // send file
+    if (!fs.existsSync(_path)) return next();
+    res.sendFile(_path);
+})
+
 // User auth endpoints? static.
 app.get("/register",async (req,res,next)=>{
     res.render("register.ejs", { user: req.user || null })
