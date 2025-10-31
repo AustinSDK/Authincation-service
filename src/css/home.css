@@ -1,0 +1,10 @@
+div.home {
+  background-image: url("/public/hackathon.webp");
+  width: 100%;
+}
+
+div.content {
+  height: 100vh;
+}
+
+/*# sourceMappingURL=home.css.map */

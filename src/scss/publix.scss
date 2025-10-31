@@ -4,7 +4,7 @@
 // SASS Variables for consistent theming
 $primary-color: #a22b27;
 $primary-light: #d63a35;
-$primary-dark: darken($primary-color, 10%);
+$primary-dark: #681c1a;
 
 $text-dark: #333;
 $text-medium: #666;
@@ -88,7 +88,7 @@ body, html {
     margin: 0;
     padding: 0;
     width: 100%;
-    min-height: 100%;
+    height: 100%;
 }
 
 body {

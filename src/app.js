@@ -128,12 +128,15 @@ app.get("/login",async (req,res,next)=>{
 app.get("/",(req,res)=>{
     let user = req.user
     if (!user){
-        return res.redirect("/login")
+        return res.redirect("/home")
     }
     let projects = auth.getProjects(user.permissions)
     console.log(projects)
     res.render("index.ejs",{user:user,projects:projects});
 });
+app.get("/home",(req,res)=>{
+    return res.render("home")
+})
 app.get("/projects",(req,res)=>{
     let user = req.user
     if (!user){
