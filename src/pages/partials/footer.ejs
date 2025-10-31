@@ -1,23 +1,27 @@
 <footer id="actual-footer">
     <div class="seperator">
+        <% if(user && user.admin){ %>
         <div class="authly admin">
             <h3>Authly Admin</h3>
 
             <p><a href="/redirect/admin/user_management">User Management</a></p>
             <p><a href="/redirect/admin/project_management">Project Management</a></p>
         </div>
+        <% } %>
         <div class="authly public">
             <h3>Authly Public</h3>
 
             <p><a href="/">Home</a></p>
             <p><a href="/public">Publics</a></p>
         </div>
+        <% if(user){ %>
         <div class="authly general">
             <h3>Authly General</h3>
 
             <p><a href="/redirect/admin/projects">Projects</a></p>
             <p><a href="/redirect/admin/project_management">Organizations</a></p>
         </div>
+        <% } %>
 
     </div>
     <p class="footer note">Made with ❤️ by <a href="https://github.com/AustinSDK">AustinSDK</a> and other <a href="https://github.com/AustinSDK/Authincation-service/">contributors!</a>!</p>

@@ -135,7 +135,7 @@ app.get("/",(req,res)=>{
     res.render("index.ejs",{user:user,projects:projects});
 });
 app.get("/home",(req,res)=>{
-    return res.render("home")
+    return res.render("home", {user:req.user})
 })
 app.get("/projects",(req,res)=>{
     let user = req.user
@@ -1293,7 +1293,7 @@ app.get("/public",(req,res)=>{
     var content = fs.readFileSync(path.join(__dirname,"public/public.md"),"utf8");
     var md = new markdownit()
     content = md.render(content)
-    res.render("public.ejs",{content:content})
+    res.render("public.ejs",{content:content, user:req.user})
 })
 
 // 404 page 
