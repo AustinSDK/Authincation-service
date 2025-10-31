@@ -13,6 +13,7 @@
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 .page-header h1 {
+  color: white;
   margin: 0;
   font-size: 3.5rem;
   font-weight: 700;
@@ -123,7 +124,7 @@
 }
 .content ul li, .content ol li {
   margin-bottom: 0.8rem;
-  color: rgb(76.5, 76.5, 76.5);
+  filter: brightness(#333, 10%);
 }
 .content ul li strong, .content ol li strong {
   color: #a22b27;
@@ -144,7 +145,7 @@
   position: relative;
 }
 .content a:active {
-  color: rgb(120.8955223881, 32.0895522388, 29.1044776119);
+  filter: brightness(-10%);
 }
 .content a[href^=http]::after {
   content: " ↗";

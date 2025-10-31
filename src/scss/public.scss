@@ -47,6 +47,7 @@ $white: #fff;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 
     h1 {
+        color: white;
         margin: 0;
         font-size: 3.5rem;
         font-weight: 700;
@@ -159,7 +160,7 @@ $white: #fff;
         
         li {
             margin-bottom: 0.8rem;
-            color: lighten($text-dark, 10%);
+            filter: brightness($text-dark, 10%);
             
             strong {
                 color: $primary-color;
@@ -187,7 +188,7 @@ $white: #fff;
         position: relative;
         
         &:active {
-            color: darken($primary-color, 10%);
+            filter: brightness(-10%);
         }
         
         // External links indicator (optional)
@@ -304,6 +305,6 @@ $white: #fff;
             background: $bg-light;
             color: $primary-color;
             font-weight: 600;
-        }
+        } 
     }
 }
