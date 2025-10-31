@@ -11,6 +11,10 @@ $border-light: #f0f0f0;
 $border-color: #e0e0e0;
 $white: #fff;
 
+// Breakpoints
+$mobile: 480px;
+$tablet: 768px;
+
 // Mixins
 @mixin gradient-bg($angle: 135deg, $color1: $primary-color, $color2: $primary-light) {
     background: linear-gradient($angle, $color1 0%, $color2 100%);
@@ -31,18 +35,105 @@ $white: #fff;
     margin-bottom: $bottom;
 }
 
+// Top navigation
+.top-nav {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    background: rgba($white, 0.95);
+    backdrop-filter: blur(10px);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    z-index: 1000;
+    padding: 1rem 0;
+    
+    .nav-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 0 2rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        
+        @include respond-below($tablet) {
+            padding: 0 1.5rem;
+        }
+    }
+    
+    .logo {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: $primary-color;
+        text-decoration: none;
+        
+        &:hover {
+            color: $primary-light;
+        }
+    }
+    
+    .nav-links {
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+        
+        @include respond-below($mobile) {
+            gap: 0.5rem;
+        }
+    }
+}
+
+// Button styles for nav
+.btn {
+    display: inline-block;
+    padding: 0.75rem 1.5rem;
+    font-size: 1rem;
+    font-weight: 600;
+    border-radius: 8px;
+    text-decoration: none;
+    @include smooth-transition(all);
+    cursor: pointer;
+    border: 2px solid transparent;
+    text-align: center;
+    
+    &.btn-secondary {
+        background: $primary-color;
+        color: $white;
+        
+        &:hover {
+            background: $primary-light;
+        }
+    }
+    
+    &.btn-outline {
+        background: transparent;
+        color: $primary-color;
+        border-color: $primary-color;
+        
+        &:hover {
+            background: $primary-color;
+            color: $white;
+        }
+    }
+    
+    @include respond-below($mobile) {
+        padding: 0.6rem 1.2rem;
+        font-size: 0.9rem;
+    }
+}
+
 // Page wrapper
 .page-wrapper {
     display: flex;
     flex-direction: column;
     min-height: 100vh;
+    padding-top: 80px; // Account for fixed nav
 }
 
 // Header section
 .page-header {
     @include gradient-bg();
     color: $white;
-    padding: 60px 40px 40px;
+    padding: 40px 40px 40px;
     text-align: center;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 

@@ -1,10 +1,341 @@
-div.home {
-  background-image: url("/public/hackathon.webp");
-  width: 100%;
+@charset "UTF-8";
+.top-nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  z-index: 1000;
+  padding: 1rem 0;
+}
+.top-nav .nav-container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+@media (max-width: 768px) {
+  .top-nav .nav-container {
+    padding: 0 1.5rem;
+  }
+}
+.top-nav .logo {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #a22b27;
+  text-decoration: none;
+}
+.top-nav .logo:hover {
+  color: #d63a35;
+}
+.top-nav .nav-links {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+@media (max-width: 480px) {
+  .top-nav .nav-links {
+    gap: 0.5rem;
+  }
 }
 
-div.content {
-  height: 100vh;
+.home-wrapper {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  padding-top: 80px;
+}
+
+.hero-section {
+  flex: 1;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: row;
+  padding: 2rem;
+  box-sizing: border-box;
+}
+@media (max-width: 768px) {
+  .hero-section {
+    padding: 1.5rem;
+  }
+}
+
+.hero-content {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4rem;
+  max-width: 1400px;
+  width: 100%;
+  align-items: center;
+}
+@media (max-width: 1024px) {
+  .hero-content {
+    gap: 2rem;
+  }
+}
+@media (max-width: 768px) {
+  .hero-content {
+    grid-template-columns: 1fr;
+    gap: 3rem;
+  }
+}
+
+.info {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+@media (max-width: 768px) {
+  .info {
+    text-align: center;
+    align-items: center;
+  }
+}
+
+.brand-title {
+  font-size: 4.5rem;
+  font-weight: 700;
+  margin: 0;
+  background: linear-gradient(135deg, #a22b27 0%, #d63a35 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  letter-spacing: -2px;
+}
+@media (max-width: 1024px) {
+  .brand-title {
+    font-size: 3.5rem;
+  }
+}
+@media (max-width: 768px) {
+  .brand-title {
+    font-size: 3rem;
+  }
+}
+@media (max-width: 480px) {
+  .brand-title {
+    font-size: 2.5rem;
+  }
+}
+
+.tagline {
+  font-size: 1.2rem;
+  line-height: 1.7;
+  color: #666;
+  margin: 0;
+}
+.tagline a {
+  color: #a22b27;
+  font-weight: 600;
+}
+.tagline a:hover {
+  color: #d63a35;
+}
+@media (max-width: 480px) {
+  .tagline {
+    font-size: 1.1rem;
+  }
+}
+
+.features-section {
+  margin: 1rem 0;
+}
+
+.features-title {
+  color: #a22b27;
+  font-size: 1.8rem;
+  margin: 0 0 1rem 0;
+  font-weight: 600;
+}
+@media (max-width: 480px) {
+  .features-title {
+    font-size: 1.5rem;
+  }
+}
+
+.features-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+.features-list li {
+  position: relative;
+  padding-left: 2rem;
+  font-size: 1.1rem;
+  color: #333;
+  line-height: 1.6;
+}
+.features-list li::before {
+  content: "✓";
+  position: absolute;
+  left: 0;
+  color: #ff5858;
+  font-weight: bold;
+  font-size: 1.3rem;
+}
+@media (max-width: 768px) {
+  .features-list li {
+    text-align: left;
+  }
+}
+@media (max-width: 480px) {
+  .features-list li {
+    font-size: 1rem;
+    padding-left: 1.8rem;
+  }
+}
+
+.cta-section {
+  margin-top: 1rem;
+}
+
+.cta-buttons {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+@media (max-width: 768px) {
+  .cta-buttons {
+    justify-content: center;
+  }
+}
+@media (max-width: 480px) {
+  .cta-buttons {
+    flex-direction: column;
+    width: 100%;
+  }
+  .cta-buttons .btn {
+    width: 100%;
+  }
+}
+
+.btn {
+  display: inline-block;
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  border-radius: 8px;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  border: 2px solid transparent;
+  text-align: center;
+}
+.btn.btn-primary {
+  background: linear-gradient(135deg, #ff5858 0%, #ff7676 100%);
+  color: #fff;
+  box-shadow: 0 4px 15px rgba(255, 88, 88, 0.3);
+  padding: 1.2rem 2.5rem;
+  font-size: 1.3rem;
+}
+.btn.btn-primary:hover {
+  background: linear-gradient(135deg, #ff7676 0%, #ff9494 100%);
+}
+@media (max-width: 480px) {
+  .btn.btn-primary {
+    font-size: 1.1rem;
+    padding: 1rem 2rem;
+  }
+}
+.btn.btn-secondary {
+  background: #a22b27;
+  color: #fff;
+}
+.btn.btn-secondary:hover {
+  background: #d63a35;
+}
+.btn.btn-outline {
+  background: transparent;
+  color: #a22b27;
+  border-color: #a22b27;
+}
+.btn.btn-outline:hover {
+  background: #a22b27;
+  color: #fff;
+}
+.btn.btn-outline-alt {
+  background: transparent;
+  color: #a22b27;
+  border-color: #a22b27;
+  padding: 1.2rem 2.5rem;
+  font-size: 1.3rem;
+}
+.btn.btn-outline-alt:hover {
+  background: #a22b27;
+  color: #fff;
+}
+@media (max-width: 480px) {
+  .btn.btn-outline-alt {
+    font-size: 1.1rem;
+    padding: 1rem 2rem;
+  }
+}
+@media (max-width: 480px) {
+  .btn {
+    padding: 0.6rem 1.2rem;
+    font-size: 0.9rem;
+  }
+}
+
+.secondary-text {
+  color: #9d9d9d;
+  font-size: 1rem;
+  margin: 0;
+}
+
+.link-secondary {
+  color: #9d9d9d;
+  text-decoration: underline;
+}
+.link-secondary:hover {
+  color: #a22b27;
+}
+
+.hero-image {
+  background-image: url("/public/hackathon.webp");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  min-height: 500px;
+  border-radius: 16px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+  position: relative;
+  overflow: hidden;
+}
+.hero-image::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(162, 43, 39, 0.1) 0%, rgba(214, 58, 53, 0.1) 100%);
+  z-index: 1;
+}
+@media (max-width: 1024px) {
+  .hero-image {
+    min-height: 400px;
+  }
+}
+@media (max-width: 768px) {
+  .hero-image {
+    min-height: 350px;
+    order: -1;
+  }
+}
+@media (max-width: 480px) {
+  .hero-image {
+    min-height: 300px;
+  }
 }
 
 /*# sourceMappingURL=home.css.map */
