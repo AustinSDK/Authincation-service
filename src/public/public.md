@@ -10,7 +10,7 @@ Check out our [Figma Design](https://www.figma.com/design/94cGUnCbpsUTiaoy4hOaGT
 
 ## Security First
 
-Security isn't just a feature—it's our foundation. Here's how we protect your information:
+Security isn't just a feature; it's our foundation. Here's how we protect your information:
 
 ### Cryptographic Hashing
 
