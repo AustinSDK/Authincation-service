@@ -9,7 +9,8 @@
     "start": "node src/app.js",
     "migrate": "node src/db-migration.js",
     "extra_resources": "curl -o block.txt \"https://raw.githubusercontent.com/disposable-email-domains/disposable-email-domains/refs/heads/main/disposable_email_blocklist.conf\"",
-    "credits": "node scripts/generate-credits.js"
+    "credits": "node scripts/generate-credits.js",
+    "sass":"sass -w src/scss:src/css"
   },
   "repository": {
     "type": "git",
@@ -41,8 +42,10 @@
     "joi": "^18.0.1",
     "jsonwebtoken": "^9.0.2",
     "mailgun.js": "^12.1.1",
+    "markdown-it": "^14.1.0",
     "otpauth": "^9.4.1",
     "qrcode": "^1.5.4",
+    "sass": "^1.93.2",
     "sqlite-auto-migrator": "^1.3.1",
     "sqlite3": "^5.1.7"
   },
