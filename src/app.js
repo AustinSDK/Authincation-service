@@ -161,6 +161,20 @@ app.get("/settings",(req,res,next)=>{
     res.redirect(`/user/${req.user.id}/settings`)
 })
 
+// Redirections
+app.get("/redirect/admin/user_management",(req,res)=>{
+    res.redirect("/users")
+})
+app.get("/redirect/admin/project_management",(req,res)=>{
+    res.redirect("/users")
+})
+app.get("/redirect/admin/projects",(req,res)=>{
+    res.redirect("/")
+})
+app.get("/redirect/admin/organizations",(req,res)=>{
+    res.redirect("/teams")
+})
+
 // user specfic stuff
 app.get("/user/:id/settings", async (req,res,next)=>{
     let user = req.user
