@@ -1084,6 +1084,7 @@ app.post("/api/v1/oauth/validate_token",(req,res)=>{
                     valid: true,
                     user_id: user.id,
                     username: user.username,
+                    display_name: user.display_name || user.username,
                     email: user.email,
                     email_verified: user.email_verified === 1,
                     client_id: validation.token.client_id,
@@ -1220,6 +1221,9 @@ app.get("/api/v1/get_user",(req,res,next)=>{
         delete user.password;
         return res.status(200).json({
             username: user.username,
+            display_name: user.display_name || user.username,
+            email: user.email,
+            email_verified: user.email_verified === 1,
             permissions: user.permissions
         });
     }
@@ -1253,6 +1257,9 @@ app.get("/api/v1/get_user",(req,res,next)=>{
             delete oauthUser.password;
             return res.status(200).json({
                 username: oauthUser.username,
+                display_name: oauthUser.display_name || oauthUser.username,
+                email: oauthUser.email,
+                email_verified: oauthUser.email_verified === 1,
                 permissions: oauthUser.permissions
             });
         }
