@@ -9,6 +9,7 @@ const express = require("express");
 const app = express();
 const cookieParser = require('cookie-parser');
 const auth = require("./libs/auth")(express,db);
+const markdownit = require('markdown-it');
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
@@ -1269,6 +1270,14 @@ app.get("/api/v1/get_user",(req,res,next)=>{
     req.error = "invalid token or user not found";
     return next();
 });
+
+// Publics
+app.get("/public",(req,res)=>{
+    var content = fs.readFileSync(path.join(__dirname,"public/public.md"),"utf8");
+    var md = new markdownit()
+    content = md.render(content)
+    res.render("public.ejs",{content:content})
+})
 
 // 404 page 
 app.use((req,res,next)=>{
