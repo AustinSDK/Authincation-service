@@ -1,0 +1,400 @@
+// Import shared variables from publix.scss if needed
+$primary-color: #a22b27;
+$primary-light: #d63a35;
+$accent-color: #ff5858;
+$accent-light: #ff7676;
+$accent-lighter: #ff9494;
+$text-dark: #333;
+$text-medium: #666;
+$text-light: #9d9d9d;
+$bg-white: #fff;
+
+// Breakpoints
+$mobile: 480px;
+$tablet: 768px;
+$desktop: 1024px;
+
+// Mixins
+@mixin gradient-overlay($opacity: 0.8) {
+    position: relative;
+    
+    &::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(135deg, rgba($primary-color, $opacity) 0%, rgba($primary-light, $opacity) 100%);
+        z-index: 1;
+    }
+}
+
+@mixin flex-center($direction: row) {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: $direction;
+}
+
+@mixin respond-below($breakpoint) {
+    @media (max-width: $breakpoint) {
+        @content;
+    }
+}
+
+@mixin smooth-transition($properties: all, $duration: 0.3s) {
+    transition: $properties $duration ease;
+}
+
+// Top navigation
+.top-nav {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    background: rgba($bg-white, 0.95);
+    backdrop-filter: blur(10px);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    z-index: 1000;
+    padding: 1rem 0;
+    
+    .nav-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 0 2rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        
+        @include respond-below($tablet) {
+            padding: 0 1.5rem;
+        }
+    }
+    
+    .logo {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: $primary-color;
+        text-decoration: none;
+        
+        &:hover {
+            color: $primary-light;
+        }
+    }
+    
+    .nav-links {
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+        
+        @include respond-below($mobile) {
+            gap: 0.5rem;
+        }
+    }
+}
+
+// Main wrapper
+.home-wrapper {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    padding-top: 80px; // Account for fixed nav
+}
+
+// Hero section
+.hero-section {
+    flex: 1;
+    min-height: 100vh;
+    @include flex-center();
+    padding: 2rem;
+    box-sizing: border-box;
+    
+    @include respond-below($tablet) {
+        padding: 1.5rem;
+    }
+}
+
+// Hero content - splits into 2 sides
+.hero-content {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4rem;
+    max-width: 1400px;
+    width: 100%;
+    align-items: center;
+    
+    @include respond-below($desktop) {
+        gap: 2rem;
+    }
+    
+    @include respond-below($tablet) {
+        grid-template-columns: 1fr;
+        gap: 3rem;
+    }
+}
+
+// Info section (left side)
+.info {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    
+    @include respond-below($tablet) {
+        text-align: center;
+        align-items: center;
+    }
+}
+
+// Brand title
+.brand-title {
+    font-size: 4.5rem;
+    font-weight: 700;
+    margin: 0;
+    background: linear-gradient(135deg, $primary-color 0%, $primary-light 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    letter-spacing: -2px;
+    
+    @include respond-below($desktop) {
+        font-size: 3.5rem;
+    }
+    
+    @include respond-below($tablet) {
+        font-size: 3rem;
+    }
+    
+    @include respond-below($mobile) {
+        font-size: 2.5rem;
+    }
+}
+
+// Tagline
+.tagline {
+    font-size: 1.2rem;
+    line-height: 1.7;
+    color: $text-medium;
+    margin: 0;
+    
+    a {
+        color: $primary-color;
+        font-weight: 600;
+        
+        &:hover {
+            color: $primary-light;
+        }
+    }
+    
+    @include respond-below($mobile) {
+        font-size: 1.1rem;
+    }
+}
+
+// Features section
+.features-section {
+    margin: 1rem 0;
+}
+
+.features-title {
+    color: $primary-color;
+    font-size: 1.8rem;
+    margin: 0 0 1rem 0;
+    font-weight: 600;
+    
+    @include respond-below($mobile) {
+        font-size: 1.5rem;
+    }
+}
+
+.features-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    
+    li {
+        position: relative;
+        padding-left: 2rem;
+        font-size: 1.1rem;
+        color: $text-dark;
+        line-height: 1.6;
+        
+        // Custom bullet point
+        &::before {
+            content: '✓';
+            position: absolute;
+            left: 0;
+            color: $accent-color;
+            font-weight: bold;
+            font-size: 1.3rem;
+        }
+        
+        @include respond-below($tablet) {
+            text-align: left;
+        }
+        
+        @include respond-below($mobile) {
+            font-size: 1rem;
+            padding-left: 1.8rem;
+        }
+    }
+}
+
+// CTA section
+.cta-section {
+    margin-top: 1rem;
+}
+
+.cta-buttons {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    
+    @include respond-below($tablet) {
+        justify-content: center;
+    }
+    
+    @include respond-below($mobile) {
+        flex-direction: column;
+        width: 100%;
+        
+        .btn {
+            width: 100%;
+        }
+    }
+}
+
+// Button styles
+.btn {
+    display: inline-block;
+    padding: 0.75rem 1.5rem;
+    font-size: 1rem;
+    font-weight: 600;
+    border-radius: 8px;
+    text-decoration: none;
+    @include smooth-transition(all);
+    cursor: pointer;
+    border: 2px solid transparent;
+    text-align: center;
+    
+    // Primary button (main CTA)
+    &.btn-primary {
+        background: linear-gradient(135deg, $accent-color 0%, $accent-light 100%);
+        color: $bg-white;
+        box-shadow: 0 4px 15px rgba($accent-color, 0.3);
+        padding: 1.2rem 2.5rem;
+        font-size: 1.3rem;
+        
+        &:hover {
+            background: linear-gradient(135deg, $accent-light 0%, $accent-lighter 100%);
+        }
+        
+        @include respond-below($mobile) {
+            font-size: 1.1rem;
+            padding: 1rem 2rem;
+        }
+    }
+    
+    // Secondary button
+    &.btn-secondary {
+        background: $primary-color;
+        color: $bg-white;
+        
+        &:hover {
+            background: $primary-light;
+        }
+    }
+    
+    // Outline button (for nav)
+    &.btn-outline {
+        background: transparent;
+        color: $primary-color;
+        border-color: $primary-color;
+        
+        &:hover {
+            background: $primary-color;
+            color: $bg-white;
+        }
+    }
+    
+    // Outline alternative (for hero CTA)
+    &.btn-outline-alt {
+        background: transparent;
+        color: $primary-color;
+        border-color: $primary-color;
+        padding: 1.2rem 2.5rem;
+        font-size: 1.3rem;
+        
+        &:hover {
+            background: $primary-color;
+            color: $bg-white;
+        }
+        
+        @include respond-below($mobile) {
+            font-size: 1.1rem;
+            padding: 1rem 2rem;
+        }
+    }
+    
+    @include respond-below($mobile) {
+        padding: 0.6rem 1.2rem;
+        font-size: 0.9rem;
+    }
+}
+
+// Secondary text and links
+.secondary-text {
+    color: $text-light;
+    font-size: 1rem;
+    margin: 0;
+}
+
+.link-secondary {
+    color: $text-light;
+    text-decoration: underline;
+    
+    &:hover {
+        color: $primary-color;
+    }
+}
+
+// Hero image (right side)
+.hero-image {
+    background-image: url("/public/hackathon.webp");
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    min-height: 500px;
+    border-radius: 16px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+    position: relative;
+    overflow: hidden;
+    
+    // Optional gradient overlay
+    &::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(135deg, rgba($primary-color, 0.1) 0%, rgba($primary-light, 0.1) 100%);
+        z-index: 1;
+    }
+    
+    @include respond-below($desktop) {
+        min-height: 400px;
+    }
+    
+    @include respond-below($tablet) {
+        min-height: 350px;
+        order: -1; // Move image above content on mobile
+    }
+    
+    @include respond-below($mobile) {
+        min-height: 300px;
+    }
+}

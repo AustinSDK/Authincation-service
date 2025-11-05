@@ -9,6 +9,7 @@ const express = require("express");
 const app = express();
 const cookieParser = require('cookie-parser');
 const auth = require("./libs/auth")(express,db);
+const markdownit = require('markdown-it');
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
@@ -101,6 +102,20 @@ app.get("/js/:path",(req,res,next)=>{
     res.sendFile(_path);
 });
 
+//public paths
+app.get("/public/:path",(req,res,next)=>{
+    // get path
+    const pub_path = path.join(__dirname,'public');
+    const _path = path.join(pub_path,req.params.path);
+
+    // check path to make sure its real
+    if (!_path.startsWith(pub_path)) return next();
+
+    // send file
+    if (!fs.existsSync(_path)) return next();
+    res.sendFile(_path);
+})
+
 // User auth endpoints? static.
 app.get("/register",async (req,res,next)=>{
     res.render("register.ejs", { user: req.user || null })
@@ -113,12 +128,15 @@ app.get("/login",async (req,res,next)=>{
 app.get("/",(req,res)=>{
     let user = req.user
     if (!user){
-        return res.redirect("/login")
+        return res.redirect("/home")
     }
     let projects = auth.getProjects(user.permissions)
     console.log(projects)
     res.render("index.ejs",{user:user,projects:projects});
 });
+app.get("/home",(req,res)=>{
+    return res.render("home", {user:req.user})
+})
 app.get("/projects",(req,res)=>{
     let user = req.user
     if (!user){
@@ -141,6 +159,20 @@ app.get("/settings",(req,res,next)=>{
         return res.redirect('/login');
     }
     res.redirect(`/user/${req.user.id}/settings`)
+})
+
+// Redirections
+app.get("/redirect/admin/user_management",(req,res)=>{
+    res.redirect("/users")
+})
+app.get("/redirect/admin/project_management",(req,res)=>{
+    res.redirect("/users")
+})
+app.get("/redirect/admin/projects",(req,res)=>{
+    res.redirect("/")
+})
+app.get("/redirect/admin/organizations",(req,res)=>{
+    res.redirect("/teams")
 })
 
 // user specfic stuff
@@ -1269,6 +1301,14 @@ app.get("/api/v1/get_user",(req,res,next)=>{
     req.error = "invalid token or user not found";
     return next();
 });
+
+// Publics
+app.get("/public",(req,res)=>{
+    var content = fs.readFileSync(path.join(__dirname,"public/public.md"),"utf8");
+    var md = new markdownit()
+    content = md.render(content)
+    res.render("public.ejs",{content:content, user:req.user})
+})
 
 // 404 page 
 app.use((req,res,next)=>{

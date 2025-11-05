@@ -18,6 +18,7 @@ This project is built with the following open-source packages:
 |---------|----------|
 | [@austinsdk/auth](https://www.npmjs.com/package/@austinsdk/auth) | ^1.1.1 |
 | [argon2](https://www.npmjs.com/package/argon2) | ^0.44.0 |
+| [base32](https://www.npmjs.com/package/base32) | ^0.0.7 |
 | [bcryptjs](https://www.npmjs.com/package/bcryptjs) | ^3.0.2 |
 | [better-sqlite3](https://www.npmjs.com/package/better-sqlite3) | ^12.2.0 |
 | [colors](https://www.npmjs.com/package/colors) | ^1.4.0 |
@@ -30,5 +31,13 @@ This project is built with the following open-source packages:
 | [joi](https://www.npmjs.com/package/joi) | ^18.0.1 |
 | [jsonwebtoken](https://www.npmjs.com/package/jsonwebtoken) | ^9.0.2 |
 | [mailgun.js](https://www.npmjs.com/package/mailgun.js) | ^12.1.1 |
+| [markdown-it](https://www.npmjs.com/package/markdown-it) | ^14.1.0 |
+| [otpauth](https://www.npmjs.com/package/otpauth) | ^9.4.1 |
+| [qrcode](https://www.npmjs.com/package/qrcode) | ^1.5.4 |
+| [sass](https://www.npmjs.com/package/sass) | ^1.93.2 |
 | [sqlite-auto-migrator](https://www.npmjs.com/package/sqlite-auto-migrator) | ^1.3.1 |
 | [sqlite3](https://www.npmjs.com/package/sqlite3) | ^5.1.7 |
+
+---
+
+*This credits section is automatically generated. Last updated: 2025-10-31*

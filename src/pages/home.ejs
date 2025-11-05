@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Authly - Secure OAuth authentication solution for developers and businesses. One account, infinite possibilities.">
+    <title>Authly - Secure OAuth Authentication</title>
+    <link rel="stylesheet" href="/css/home.css">
+    <link rel="stylesheet" href="/css/publix.css">
+    <link rel="stylesheet" href="/css/footer.css">
+</head>
+<body>
+    <header class="top-nav">
+        <div class="nav-container">
+            <a href="/" class="logo">Authly</a>
+            <nav class="nav-links">
+                <a href="/login" class="btn btn-outline">Login</a>
+                <a href="/register" class="btn btn-secondary">Register</a>
+            </nav>
+        </div>
+    </header>
+    <main class="home-wrapper">
+        <div class="hero-section">
+            <div class="hero-content">
+                <div class="info">
+                    <h1 class="brand-title">Authly</h1>
+                    <p class="tagline">Built and trusted by <a href="https://AustinSDK.me">AustinSDK</a>, <a href="https://auth.AustinSDK.me">Authly</a> is a secure solution to all your OAuth problems with customers!</p>
+                    
+                    <div class="features-section">
+                        <h3 class="features-title">Features</h3>
+                        <ul class="features-list">
+                            <li>1 account, infinite possibilities</li>
+                            <li>Secure OAuth system for any developers or businesses!</li>
+                            <li>Trusted by developers world wide!</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="cta-section">
+                        <div class="cta-buttons">
+                            <a href="/register" class="btn btn-primary">Get Started!</a>
+                            <a href="/public" class="btn btn-outline-alt">Learn More</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="hero-image"></div>
+            </div>
+        </div>
+    </main>
+    <%- include("partials/footer.ejs", {user:user}) %>
+</body>
+</html>

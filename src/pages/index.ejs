@@ -24,12 +24,25 @@
                 </li>
             <% }) %>
             </ul>
+
+            <h2>Authly Tools</h2>
+            <ul class="list">
+                <li class="card">
+                    <a href="/teams" class="title">Organizations</a>
+                    <div class="muted">Manage and join teams!</div>
+                </li>
+            </ul>
+
             <% if (user.admin) { %>
-            <h2>Auth Service Tools</h2>
+            <h2>Authly Admin Tools</h2>
             <ul class="list">
                 <li class="card">
                     <a href="/users" class="title">Users</a>
                     <div class="muted">Users management</div>
+                </li>
+                <li class="card">
+                    <a href="/admin/teams" class="title">Organizations</a>
+                    <div class="muted">Review organizations!</div>
                 </li>
             </ul>
             <% } %>

@@ -1,0 +1,31 @@
+footer#actual-footer {
+  background-color: black;
+  width: 100vw;
+  color: white;
+  padding: 0;
+  padding-top: 20px;
+}
+footer#actual-footer .seperator {
+  table-layout: fixed;
+  display: table;
+  width: 100%;
+  padding-bottom: 20px;
+}
+footer#actual-footer .seperator .authly {
+  display: table-cell;
+  text-align: center;
+  width: 50%;
+}
+footer#actual-footer .seperator .authly a, footer#actual-footer .seperator .authly p {
+  padding: 0;
+  margin: 0;
+  color: white;
+}
+footer#actual-footer .footer.note {
+  text-align: center;
+  padding: 20px;
+  color: rgb(100, 100, 100);
+  font-size: 32px;
+}
+
+/*# sourceMappingURL=footer.css.map */

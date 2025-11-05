@@ -1,0 +1,33 @@
+footer#actual-footer{
+    background-color: black;
+    width: 100vw;
+    color: white;
+    padding: 0;
+    padding-top: 20px;
+
+    .seperator{
+        table-layout: fixed;
+        display: table;
+        width: 100%;
+        .authly{
+            display: table-cell;
+            text-align: center;
+            width: 50%; // Adjust this value for equal distribution
+
+            a,p{
+                padding: 0;
+                margin: 0;
+
+                color: white;
+            }
+        }
+        padding-bottom: 20px;
+    }
+
+    .footer.note{
+        text-align: center;
+        padding: 20px;
+        color: rgb(100, 100, 100);
+        font-size: 32px;
+    }
+}
