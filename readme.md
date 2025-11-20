@@ -12,6 +12,12 @@ For a tool like this, we want to keep you as anonymous as possible; Therefore a 
 
 This project is built with the following open-source packages:
 
+## Installing Authly!
+1. `gh repo clone AustinSDK/Authincation-service` or `git clone https://github.com/AustinSDK/Authincation-service.git`
+2. Make sure you have npm installed, and install all the packages with `npm i`
+3. Run the app, after some local issues, you might have to run the app, then run `npm run migrate` to migrate certain parts of the db.
+4. And lastly, to run the app without those bugs /\, or for that reason, use `npm start`!
+
 ### Dependencies
 
 | Package | Version |
